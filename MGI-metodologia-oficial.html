@@ -1047,9 +1047,85 @@ body {
 
     <div class="callout important">
       <div class="callout-title">Declaración de autoría</div>
-      <p>Este documento, la metodología MGI y el sistema de indicadores descritos en él 
-      son creación original de <strong>Marcos Gainza</strong>, desarrollados en marzo de 2026. 
+      <p>Este documento, la metodología MGI y el sistema de indicadores descritos en él
+      son creación original de <strong>Marcos Gainza</strong>, desarrollados en marzo de 2026.
       Queda prohibida la reproducción total o parcial sin autorización expresa del autor.</p>
+    </div>
+  </div>
+
+  <hr class="divider page-break">
+
+  <!-- 9. API ACCESS -->
+  <div class="section">
+    <div class="section-num">Sección 09</div>
+    <h2 class="section-title">Acceso API — MGI en Tiempo Real</h2>
+    <div class="section-body">
+      <p>
+        El MGI Score está disponible como <strong>API REST</strong> para integración
+        en plataformas, dashboards, bots de trading y aplicaciones financieras.
+        La API se actualiza cada 30 segundos con datos reales de mercado.
+      </p>
+    </div>
+
+    <div class="formula-box" style="padding:24px 28px;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.2em;margin-bottom:14px;">ENDPOINT PRINCIPAL</div>
+      <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--gold);margin-bottom:16px;word-break:break-all;">
+        GET https://ciclos-globales-production.up.railway.app/v1/score
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.2em;margin-bottom:10px;">RESPUESTA</div>
+      <pre style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.6;margin:0;white-space:pre-wrap;">{
+  "mgi_score": +0.74,
+  "signal": "ACUMULACION",
+  "indicators": {
+    "I1_posicion_seno": +0.82,
+    "I2_pendiente": +1.00,
+    "I3_dist_media": +0.61,
+    "I4_confiabilidad": 0.88,
+    "I5_cruce_medias": +1.00
+  },
+  "market_data": {
+    "btc_usd": 85420,
+    "riesgo_pais_arg": 618,
+    "brecha_ars": 21.0
+  }
+}</pre>
+    </div>
+
+    <table class="ind-table">
+      <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th>Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="ind-formula">/v1/score</div></td>
+          <td>MGI Score completo + indicadores + datos de mercado</td>
+        </tr>
+        <tr>
+          <td><div class="ind-formula">/v1/indicators</div></td>
+          <td>Solo los 5 indicadores I₁ a I₅</td>
+        </tr>
+        <tr>
+          <td><div class="ind-formula">/v1/market</div></td>
+          <td>Datos de mercado (BTC, FED, Blue, Riesgo País)</td>
+        </tr>
+        <tr>
+          <td><div class="ind-formula">/v1/countries</div></td>
+          <td>Score y fase por país</td>
+        </tr>
+        <tr>
+          <td><div class="ind-formula">/docs</div></td>
+          <td>Documentación interactiva (Swagger UI)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <div class="callout-title">Estado actual</div>
+      <p>La API está en acceso abierto durante el período de lanzamiento.
+      Probala ahora sin key desde cualquier navegador o aplicación.</p>
     </div>
   </div>
 
