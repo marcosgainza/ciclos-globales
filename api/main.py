@@ -5,7 +5,7 @@ Framework: FastAPI
 Deploy: Railway / Render / Fly.io (gratis)
 
 Uso local:
-  pip install fastapi uvicorn requests
+  pip install fastapi uvicorn requests mercadopago
   uvicorn main:app --reload
 
 Endpoints:
@@ -14,20 +14,32 @@ Endpoints:
   GET /v1/indicators → solo los 5 indicadores
   GET /v1/market     → solo datos de mercado
   GET /v1/countries  → score por país
+  POST /v1/create-preference → crear checkout MercadoPago
+  POST /v1/webhook/mercadopago → webhook de pagos
+  GET /payment-success → página post-pago con API key
 """
 
 import math
 import time
 import threading
+import sqlite3
+import secrets
+import os
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 
 try:
     import requests as req
 except ImportError:
     raise ImportError("pip install requests")
+
+try:
+    import mercadopago
+except ImportError:
+    raise ImportError("pip install mercadopago")
 
 # ════════════════════════════════════════════
 # CONFIG
@@ -35,16 +47,58 @@ except ImportError:
 FRED_KEY = "af1b5c3f8dc1ac7a964de55ab5a7d1fd"
 UPDATE_INTERVAL = 30  # seconds
 
-# API Keys — agregá las keys de tus clientes acá
-# En producción usarías una base de datos
+# API Keys — hardcoded (siempre válidas)
 API_KEYS = {
-    "mgi-demo-key-2026",       # key de demo
-    "mgi-marcos-master-key",   # tu key personal
+    "mgi-demo-key-2026",
+    "mgi-marcos-master-key",
 }
 
-# Set to False to disable API key requirement (for testing)
-REQUIRE_AUTH = False
+REQUIRE_AUTH = False  # Cambiar a True cuando quieras exigir API key
 
+# MercadoPago
+MP_ACCESS_TOKEN = os.getenv(
+    "MP_ACCESS_TOKEN",
+    "APP_USR-3227082155784399-022520-b5f8073673d3e6786676e6f08c0c88c1-136606559",
+)
+RAILWAY_URL = os.getenv(
+    "RAILWAY_URL",
+    "https://ciclos-globales-production.up.railway.app",
+)
+sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
+
+# ════════════════════════════════════════════
+# DATABASE (SQLite)
+# ════════════════════════════════════════════
+DB_PATH = os.getenv("DB_PATH", "mgi_keys.db")
+
+
+def init_db():
+    db = sqlite3.connect(DB_PATH)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT UNIQUE NOT NULL,
+            email TEXT,
+            mp_payment_id TEXT UNIQUE,
+            created_at TEXT NOT NULL,
+            active INTEGER DEFAULT 1
+        )
+    """)
+    db.commit()
+    db.close()
+
+
+def get_db():
+    db = sqlite3.connect(DB_PATH)
+    db.row_factory = sqlite3.Row
+    return db
+
+
+init_db()
+
+# ════════════════════════════════════════════
+# APP
+# ════════════════════════════════════════════
 app = FastAPI(
     title="MGI — Marcos Gainza Index",
     description="API de ciclos económicos globales en tiempo real",
@@ -54,7 +108,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -68,9 +122,14 @@ def verify_key(authorization: str = Header(default=None)):
     if not authorization:
         raise HTTPException(401, "API key required. Header: Authorization: Bearer <key>")
     key = authorization.replace("Bearer ", "").strip()
-    if key not in API_KEYS:
-        raise HTTPException(403, "Invalid API key")
-    return True
+    if key in API_KEYS:
+        return True
+    db = get_db()
+    row = db.execute("SELECT active FROM api_keys WHERE key = ?", (key,)).fetchone()
+    db.close()
+    if row and row["active"]:
+        return True
+    raise HTTPException(403, "Invalid API key")
 
 
 # ════════════════════════════════════════════
@@ -274,7 +333,6 @@ def fetch_all():
 # BACKGROUND UPDATER
 # ════════════════════════════════════════════
 def updater_loop():
-    # Pre-fill history
     for i in range(25):
         yt = y_clean(t_val - (25 - i) * 0.1)
         history.append(yt)
@@ -292,7 +350,7 @@ def startup():
 
 
 # ════════════════════════════════════════════
-# ENDPOINTS
+# ENDPOINTS — MGI
 # ════════════════════════════════════════════
 @app.get("/")
 def root():
@@ -398,6 +456,222 @@ def countries(authorization: str = Header(default=None)):
         "mgi_score": calc_mgi()["mgi_score"],
         "updated_at": LAST_UPDATE["ts"],
     }
+
+
+# ════════════════════════════════════════════
+# ENDPOINTS — MERCADOPAGO PAGOS
+# ════════════════════════════════════════════
+@app.post("/v1/create-preference")
+def create_preference():
+    preference_data = {
+        "items": [
+            {
+                "title": "MGI API — Licencia Mensual",
+                "quantity": 1,
+                "unit_price": 29,
+                "currency_id": "ARS",
+            }
+        ],
+        "back_urls": {
+            "success": f"{RAILWAY_URL}/payment-success",
+            "failure": f"{RAILWAY_URL}/payment-failure",
+            "pending": f"{RAILWAY_URL}/payment-pending",
+        },
+        "auto_return": "approved",
+        "notification_url": f"{RAILWAY_URL}/v1/webhook/mercadopago",
+    }
+    result = sdk.preference().create(preference_data)
+    preference = result["response"]
+    return {"init_point": preference["init_point"], "id": preference["id"]}
+
+
+def _generate_key():
+    return f"mgi-{secrets.token_hex(16)}"
+
+
+def _get_or_create_key(payment_id):
+    """Busca una key existente para el payment_id, o la crea si el pago fue aprobado."""
+    db = get_db()
+    row = db.execute("SELECT key FROM api_keys WHERE mp_payment_id = ?", (str(payment_id),)).fetchone()
+    if row:
+        db.close()
+        return row["key"]
+
+    payment_info = sdk.payment().get(int(payment_id))
+    payment = payment_info["response"]
+
+    if payment.get("status") != "approved":
+        db.close()
+        return None
+
+    api_key = _generate_key()
+    email = payment.get("payer", {}).get("email", "unknown")
+    try:
+        db.execute(
+            "INSERT INTO api_keys (key, email, mp_payment_id, created_at) VALUES (?, ?, ?, ?)",
+            (api_key, email, str(payment_id), datetime.now(timezone.utc).isoformat()),
+        )
+        db.commit()
+    except sqlite3.IntegrityError:
+        row = db.execute("SELECT key FROM api_keys WHERE mp_payment_id = ?", (str(payment_id),)).fetchone()
+        api_key = row["key"] if row else None
+    db.close()
+    return api_key
+
+
+@app.post("/v1/webhook/mercadopago")
+async def mercadopago_webhook(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(content={"status": "ok"}, status_code=200)
+
+    if body.get("type") == "payment":
+        payment_id = body.get("data", {}).get("id")
+        if payment_id:
+            _get_or_create_key(payment_id)
+
+    return JSONResponse(content={"status": "ok"}, status_code=200)
+
+
+SUCCESS_HTML = """<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGI — API Key Activada</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0A0F;color:#EEF0FF;font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:rgba(201,162,39,0.06);border:1px solid rgba(201,162,39,0.25);border-radius:20px;padding:48px 40px;max-width:540px;width:100%;text-align:center}
+.badge{display:inline-block;font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.3em;color:#C9A227;border:1px solid rgba(201,162,39,0.3);border-radius:20px;padding:6px 16px;margin-bottom:24px}
+h1{font-size:28px;font-weight:800;margin-bottom:10px}
+.sub{font-family:'Syne Mono',monospace;font-size:12px;color:rgba(238,240,255,0.5);margin-bottom:32px}
+.key-label{font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.25em;color:rgba(238,240,255,0.4);margin-bottom:10px}
+.key-box{background:rgba(0,232,122,0.08);border:1px solid rgba(0,232,122,0.3);border-radius:10px;padding:18px 20px;font-family:'Syne Mono',monospace;font-size:14px;color:#00E87A;word-break:break-all;cursor:pointer;transition:background 0.2s;position:relative}
+.key-box:hover{background:rgba(0,232,122,0.14)}
+.key-box::after{content:'click para copiar';position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(238,240,255,0.3);letter-spacing:0.1em}
+.usage{margin-top:40px;text-align:left;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:20px}
+.usage-title{font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.2em;color:rgba(238,240,255,0.4);margin-bottom:12px}
+.usage code{display:block;font-family:'Syne Mono',monospace;font-size:11px;color:rgba(238,240,255,0.7);line-height:1.8;white-space:pre-wrap}
+.back{display:inline-block;margin-top:32px;font-family:'Syne Mono',monospace;font-size:11px;color:#C9A227;text-decoration:none;border:1px solid rgba(201,162,39,0.3);border-radius:8px;padding:10px 24px;transition:background 0.2s}
+.back:hover{background:rgba(201,162,39,0.1)}
+.copied{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#00E87A;color:#0A0A0F;font-family:'Syne Mono',monospace;font-size:12px;font-weight:700;padding:10px 24px;border-radius:8px;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.copied.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="badge">MGI — MARCOS GAINZA INDEX</div>
+  <h1>Pago Confirmado</h1>
+  <p class="sub">Tu API key fue generada automaticamente</p>
+  <div class="key-label">TU API KEY</div>
+  <div class="key-box" id="keyBox" onclick="copyKey()">{{API_KEY}}</div>
+  <div class="usage">
+    <div class="usage-title">COMO USAR</div>
+    <code>curl -H "Authorization: Bearer {{API_KEY}}" \\
+  {{BASE_URL}}/v1/score</code>
+  </div>
+  <a href="{{BASE_URL}}" class="back">VOLVER AL MGI</a>
+</div>
+<div class="copied" id="copied">KEY COPIADA</div>
+<script>
+function copyKey(){
+  navigator.clipboard.writeText('{{API_KEY}}');
+  var el=document.getElementById('copied');
+  el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show')},1500);
+}
+</script>
+</body>
+</html>"""
+
+FAILURE_HTML = """<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGI — Pago fallido</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0A0F;color:#EEF0FF;font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:rgba(255,45,85,0.06);border:1px solid rgba(255,45,85,0.25);border-radius:20px;padding:48px 40px;max-width:540px;width:100%;text-align:center}
+h1{font-size:28px;font-weight:800;margin-bottom:10px;color:#FF2D55}
+.sub{font-family:'Syne Mono',monospace;font-size:12px;color:rgba(238,240,255,0.5);margin-bottom:24px}
+.back{display:inline-block;font-family:'Syne Mono',monospace;font-size:11px;color:#C9A227;text-decoration:none;border:1px solid rgba(201,162,39,0.3);border-radius:8px;padding:10px 24px;transition:background 0.2s}
+.back:hover{background:rgba(201,162,39,0.1)}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Pago no completado</h1>
+  <p class="sub">El pago fue rechazado o cancelado. Podes intentar de nuevo.</p>
+  <a href="{{BASE_URL}}" class="back">VOLVER AL MGI</a>
+</div>
+</body>
+</html>"""
+
+PENDING_HTML = """<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGI — Pago pendiente</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0A0F;color:#EEF0FF;font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:rgba(201,162,39,0.06);border:1px solid rgba(201,162,39,0.25);border-radius:20px;padding:48px 40px;max-width:540px;width:100%;text-align:center}
+h1{font-size:28px;font-weight:800;margin-bottom:10px;color:#C9A227}
+.sub{font-family:'Syne Mono',monospace;font-size:12px;color:rgba(238,240,255,0.5);margin-bottom:24px;line-height:1.8}
+.back{display:inline-block;font-family:'Syne Mono',monospace;font-size:11px;color:#C9A227;text-decoration:none;border:1px solid rgba(201,162,39,0.3);border-radius:8px;padding:10px 24px;transition:background 0.2s}
+.back:hover{background:rgba(201,162,39,0.1)}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Pago Pendiente</h1>
+  <p class="sub">Tu pago esta siendo procesado. Cuando se acredite, vas a recibir tu API key.<br>Contactanos si tarda mas de 24hs: <strong>@gainzamarcosia</strong></p>
+  <a href="{{BASE_URL}}" class="back">VOLVER AL MGI</a>
+</div>
+</body>
+</html>"""
+
+
+@app.get("/payment-success", response_class=HTMLResponse)
+def payment_success(payment_id: str = None, collection_id: str = None):
+    pid = payment_id or collection_id
+    api_key = None
+
+    if pid:
+        api_key = _get_or_create_key(pid)
+
+    if not api_key:
+        return HTMLResponse(
+            content=PENDING_HTML.replace("{{BASE_URL}}", RAILWAY_URL),
+            status_code=200,
+        )
+
+    html = SUCCESS_HTML.replace("{{API_KEY}}", api_key).replace("{{BASE_URL}}", RAILWAY_URL)
+    return HTMLResponse(content=html, status_code=200)
+
+
+@app.get("/payment-failure", response_class=HTMLResponse)
+def payment_failure():
+    return HTMLResponse(
+        content=FAILURE_HTML.replace("{{BASE_URL}}", RAILWAY_URL),
+        status_code=200,
+    )
+
+
+@app.get("/payment-pending", response_class=HTMLResponse)
+def payment_pending():
+    return HTMLResponse(
+        content=PENDING_HTML.replace("{{BASE_URL}}", RAILWAY_URL),
+        status_code=200,
+    )
 
 
 # ════════════════════════════════════════════
