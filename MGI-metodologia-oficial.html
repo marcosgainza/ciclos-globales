@@ -1133,6 +1133,7 @@ body {
         </div>
         <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;color:var(--gray);margin-bottom:12px;">METODOS DE PAGO</div>
         <div style="display:flex;flex-direction:column;gap:12px;">
+          <button id="btn-pagar-mp" onclick="iniciarPago()" style="display:block;width:100%;background:#009ee3;color:#fff;text-align:center;padding:16px 20px;border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;letter-spacing:0.05em;border:none;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">PAGAR CON MERCADOPAGO — $29 USD</button>
           <div style="background:var(--gray-light);padding:14px 16px;border-radius:4px;border-left:3px solid var(--gold);">
             <div style="font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--blue);margin-bottom:4px;">USDT (TRC-20) — Red Tron</div>
             <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--black);word-break:break-all;">TYbnu4z8bRFiNfHVne4SrDvzit2ompKkNS</div>
@@ -1143,7 +1144,7 @@ body {
           </div>
         </div>
         <div style="margin-top:16px;font-size:11px;color:var(--gray);line-height:1.7;">
-          Contacto: <strong>@gainzamarcosia</strong> (Instagram) · <strong>@Marcox2026</strong> (X)
+          Después del pago, contactá a <strong>@gainzamarcosia</strong> (Instagram) o <strong>@Marcox2026</strong> (X) con tu comprobante para recibir tu API key.
         </div>
       </div>
     </div>
@@ -1163,5 +1164,26 @@ body {
   <div>@gainzamarcosia · @Marcox2026 · Versión 1.0 · Marzo 2026</div>
 </div>
 
+<script>
+async function iniciarPago() {
+    var btn = document.getElementById('btn-pagar-mp');
+    btn.textContent = 'PROCESANDO...';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    try {
+        var res = await fetch('https://ciclos-globales-production.up.railway.app/v1/create-preference', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+        });
+        var data = await res.json();
+        window.location.href = data.init_point;
+    } catch (err) {
+        alert('Error al iniciar el pago. Intenta de nuevo.');
+        btn.textContent = 'PAGAR CON MERCADOPAGO — $29 USD';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+</script>
 </body>
 </html>
