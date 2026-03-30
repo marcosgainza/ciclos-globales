@@ -69,7 +69,7 @@ sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 # ════════════════════════════════════════════
 # DATABASE (SQLite)
 # ════════════════════════════════════════════
-DB_PATH = os.getenv("DB_PATH", "mgi_keys.db")
+DB_PATH = os.getenv("DB_PATH", "/tmp/mgi_keys.db")
 
 
 def init_db():
