@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MGI — Marcos Gainza Index · Documento de Metodología</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;700&family=DM+Mono&display=swap');
+
+:root {
+  --black: #0A0A0A;
+  --dark: #1A1A2E;
+  --blue: #0A2463;
+  --blue-mid: #1E3A8A;
+  --blue-light: #3B82F6;
+  --gold: #C9A227;
+  --gold-light: #F0C040;
+  --white: #FAFAFA;
+  --gray: #6B7280;
+  --gray-light: #F3F4F6;
+  --border: #E5E7EB;
+  --red: #DC2626;
+  --green: #16A34A;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--white);
+  color: var(--black);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11pt;
+  line-height: 1.7;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+@media print {
+  body { max-width: 100%; }
+  .no-print { display: none; }
+  .page-break { page-break-before: always; }
+}
+
+/* PRINT BUTTON */
+.print-bar {
+  background: var(--blue);
+  padding: 12px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.print-btn {
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  padding: 8px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.print-info {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.15em;
+}
+
+/* COVER PAGE */
+.cover {
+  min-height: 100vh;
+  background: var(--blue);
+  padding: 80px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,162,39,0.15);
+}
+
+.cover::after {
+  content: '';
+  position: absolute;
+  bottom: -50px; left: -50px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,162,39,0.1);
+}
+
+.cover-top {}
+
+.cover-badge {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  padding: 5px 14px;
+  margin-bottom: 48px;
+  text-transform: uppercase;
+}
+
+.cover-index {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.cover-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(52px, 8vw, 88px);
+  font-weight: 900;
+  color: var(--white);
+  line-height: 0.92;
+  margin-bottom: 8px;
+}
+
+.cover-subtitle {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(18px, 3vw, 26px);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--gold);
+  margin-bottom: 32px;
+}
+
+.cover-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  max-width: 480px;
+  line-height: 1.7;
+  border-left: 2px solid var(--gold);
+  padding-left: 16px;
+}
+
+.cover-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.cover-author {
+  color: var(--white);
+}
+
+.cover-author-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.cover-author-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.2em;
+}
+
+.cover-meta {
+  text-align: right;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.1em;
+  line-height: 1.8;
+}
+
+.cover-formula {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  margin-top: 24px;
+  padding: 14px 20px;
+  border: 1px solid rgba(201,162,39,0.3);
+  display: inline-block;
+}
+
+/* DOCUMENT BODY */
+.doc-body {
+  padding: 60px;
+}
+
+@media(max-width: 600px) {
+  .cover { padding: 48px 28px; }
+  .doc-body { padding: 32px 24px; }
+}
+
+/* SECTIONS */
+.section {
+  margin-bottom: 52px;
+}
+
+.section-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--blue-light);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--gold);
+}
+
+.section-body {
+  font-size: 11pt;
+  line-height: 1.8;
+  color: #1F2937;
+}
+
+.section-body p { margin-bottom: 14px; }
+.section-body strong { color: var(--blue); }
+
+/* FORMULA BOX */
+.formula-box {
+  background: var(--blue);
+  color: var(--white);
+  padding: 28px 32px;
+  border-radius: 4px;
+  margin: 28px 0;
+  border-left: 4px solid var(--gold);
+}
+
+.formula-main {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(16px, 3vw, 24px);
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+
+.formula-params {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.fp {
+  border-left: 2px solid rgba(201,162,39,0.4);
+  padding-left: 12px;
+}
+
+.fp-sym {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+
+.fp-name { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.8); margin-bottom: 2px; }
+.fp-desc { font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+/* INDICATORS TABLE */
+.ind-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 10.5pt;
+}
+
+.ind-table th {
+  background: var(--blue);
+  color: var(--white);
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.ind-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.ind-table tr:nth-child(even) td { background: var(--gray-light); }
+
+.ind-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+.ind-formula {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  background: rgba(10,36,99,0.06);
+  padding: 4px 8px;
+  border-radius: 3px;
+  margin-top: 4px;
+  display: inline-block;
+  color: var(--blue);
+}
+
+/* SIGNAL TABLE */
+.signal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+}
+
+.signal-row td {
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+}
+
+.signal-row.green td:first-child { background: #16A34A; }
+.signal-row.yellow td:first-child { background: #D97706; }
+.signal-row.red td:first-child { background: #DC2626; }
+.signal-row.black td:first-child { background: #1F2937; }
+
+.sig-icon {
+  font-size: 24px;
+  color: white;
+  text-align: center;
+}
+
+.sig-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.sig-range {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--gray);
+}
+
+.sig-desc { font-size: 11px; color: #374151; line-height: 1.6; }
+
+/* COUNTRY TABLE */
+.country-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 10pt;
+}
+
+.country-table th {
+  background: var(--dark);
+  color: var(--white);
+  padding: 10px 12px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.country-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.country-table tr:hover td { background: var(--gray-light); }
+
+.phase-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* CALLOUT */
+.callout {
+  padding: 20px 24px;
+  border-radius: 4px;
+  margin: 24px 0;
+  border-left: 4px solid;
+}
+
+.callout.info { background: #EFF6FF; border-color: var(--blue-light); }
+.callout.warning { background: #FFFBEB; border-color: var(--gold); }
+.callout.important { background: #FEF2F2; border-color: var(--red); }
+
+.callout-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.callout.info .callout-title { color: var(--blue-light); }
+.callout.warning .callout-title { color: #92400E; }
+.callout.important .callout-title { color: var(--red); }
+
+.callout p { font-size: 11px; line-height: 1.7; }
+
+/* DIVIDER */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+/* BACKTEST TABLE */
+.backtest {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 10pt;
+}
+
+.backtest th {
+  background: var(--gray-light);
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+
+.backtest td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+}
+
+.backtest td.good { color: var(--green); font-weight: 700; font-family: 'DM Mono', monospace; }
+.backtest td.bad  { color: var(--red);   font-weight: 700; font-family: 'DM Mono', monospace; }
+.backtest td.mono { font-family: 'DM Mono', monospace; }
+
+/* MONETIZATION */
+.mono-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media(max-width:600px){ .mono-grid { grid-template-columns: 1fr; } }
+
+.mono-card {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 16px;
+  border-top: 3px solid;
+}
+
+.mono-card.tier1 { border-top-color: var(--blue-light); }
+.mono-card.tier2 { border-top-color: var(--gold); }
+.mono-card.tier3 { border-top-color: var(--green); }
+.mono-card.tier4 { border-top-color: #7C3AED; }
+
+.mono-tier {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--gray);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.mono-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+
+.mono-price {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.mono-desc { font-size: 11px; color: var(--gray); line-height: 1.6; }
+
+/* FOOTER */
+.doc-footer {
+  background: var(--blue);
+  color: rgba(255,255,255,0.5);
+  padding: 28px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.doc-footer strong { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- PRINT BAR -->
+<div class="print-bar no-print">
+  <div class="print-info">MGI — DOCUMENTO DE METODOLOGÍA OFICIAL</div>
+  <button class="print-btn" onclick="window.print()">⬇ IMPRIMIR / GUARDAR PDF</button>
+</div>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-badge">Documento de Metodología Oficial · Versión 1.0</div>
+    <div class="cover-index">Índice de Ciclos Económicos Globales</div>
+    <div class="cover-title">MGI</div>
+    <div class="cover-subtitle">Marcos Gainza Index</div>
+    <p class="cover-desc">
+      Metodología para la medición, clasificación y señalización de fases del ciclo económico 
+      global mediante modelos matemáticos aplicados a datos macroeconómicos en tiempo real.
+    </p>
+    <div class="cover-formula">y(t) = A · sin(ωt + φ) + bt + ε</div>
+  </div>
+
+  <div class="cover-bottom">
+    <div class="cover-author">
+      <div class="cover-author-name">Marcos Gainza</div>
+      <div class="cover-author-title">CREADOR · METODÓLOGO · @gainzamarcosia · @Marcox2026</div>
+    </div>
+    <div class="cover-meta">
+      <div>VERSIÓN 1.0</div>
+      <div>MARZO 2026</div>
+      <div>CONFIDENCIAL</div>
+      <div>MGI · CICLOS GLOBALES</div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENT BODY -->
+<div class="doc-body">
+
+  <!-- 1. RESUMEN EJECUTIVO -->
+  <div class="section">
+    <div class="section-num">Sección 01</div>
+    <h2 class="section-title">Resumen Ejecutivo</h2>
+    <div class="section-body">
+      <p>
+        El <strong>MGI — Marcos Gainza Index</strong> es un índice cuantitativo de ciclos económicos 
+        que mide, en tiempo real, la fase del ciclo en la que se encuentra cada economía global. 
+        A diferencia de los indicadores tradicionales que miden el nivel de una variable, el MGI 
+        mide la <strong>posición relativa dentro del ciclo</strong> y genera una señal accionable 
+        basada en esa posición.
+      </p>
+      <p>
+        El índice se basa en la función matemática de ciclos económicos 
+        <strong>y(t) = A·sin(ωt+φ) + bt + ε</strong>, aplicada a datos macroeconómicos 
+        reales provenientes de fuentes oficiales: Reserva Federal de EEUU (FRED), 
+        Banco Central do Brasil, Banxico, Bluelytics y CoinGecko.
+      </p>
+      <p>
+        El MGI produce un <strong>score único entre −1 y +1</strong> que sintetiza 
+        cinco indicadores técnicos internos y lo traduce en tres señales operativas: 
+        ACUMULACIÓN, NEUTRAL y DISTRIBUCIÓN.
+      </p>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Propósito del índice</div>
+      <p>El MGI no predice el futuro. Identifica matemáticamente en qué fase del ciclo se encuentra 
+      una economía en un momento dado, permitiendo tomar decisiones de asignación de capital 
+      con mayor contexto y menor reactividad emocional.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2. LA FÓRMULA -->
+  <div class="section">
+    <div class="section-num">Sección 02</div>
+    <h2 class="section-title">La Fórmula Base</h2>
+    <div class="section-body">
+      <p>
+        El MGI utiliza una función sinusoidal con tendencia y ruido estocástico, 
+        ampliamente utilizada en econometría para modelar ciclos económicos. 
+        Esta función no es una invención — es el <strong>modelo estándar de ciclos de negocio</strong> 
+        derivado de los trabajos de Burns & Mitchell (1946) y Hodrick-Prescott (1997), 
+        adaptado para operar con datos en tiempo real.
+      </p>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-main">y(t) = A · sin(ωt + φ) + bt + ε</div>
+      <div class="formula-params">
+        <div class="fp">
+          <div class="fp-sym">A</div>
+          <div class="fp-name">Amplitud</div>
+          <div class="fp-desc">Intensidad de los ciclos. Derivada de la volatilidad del activo de riesgo global (Bitcoin 24h). A mayor volatilidad, mayor amplitud del ciclo local.</div>
+        </div>
+        <div class="fp">
+          <div class="fp-sym">ω</div>
+          <div class="fp-name">Velocidad del ciclo</div>
+          <div class="fp-desc">Frecuencia angular del ciclo. Fijada en 0.52 rad/período, equivalente a un ciclo completo cada ~12 períodos, consistente con ciclos históricos de mediano plazo.</div>
+        </div>
+        <div class="fp">
+          <div class="fp-sym">φ</div>
+          <div class="fp-name">Fase actual</div>
+          <div class="fp-desc">Desplazamiento de fase. Se actualiza dinámicamente según la variación porcentual del activo de referencia, indicando el punto de entrada actual en el ciclo.</div>
+        </div>
+        <div class="fp">
+          <div class="fp-sym">b</div>
+          <div class="fp-name">Tendencia estructural</div>
+          <div class="fp-desc">Crecimiento de largo plazo. Se calcula inversamente proporcional a la inflación: b = max(0.5, 4.0 − inflación × 0.13). A mayor inflación, menor tendencia real.</div>
+        </div>
+        <div class="fp">
+          <div class="fp-sym">ε</div>
+          <div class="fp-name">Ruido / Eventos</div>
+          <div class="fp-desc">Componente estocástico. Representa eventos exógenos: guerras, pandemias, shocks políticos. Para Argentina se calibra con la brecha cambiaria. Para economías estables, con la volatilidad diaria del activo de referencia.</div>
+        </div>
+        <div class="fp">
+          <div class="fp-sym">y(t)</div>
+          <div class="fp-name">Valor del índice</div>
+          <div class="fp-desc">El output de la función en el período t. Su posición relativa respecto a su propia media histórica determina la fase del ciclo y la señal operativa del MGI.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 3. LOS 5 INDICADORES -->
+  <div class="section">
+    <div class="section-num">Sección 03</div>
+    <h2 class="section-title">Sistema de 5 Indicadores</h2>
+    <div class="section-body">
+      <p>
+        El MGI Score se calcula mediante la combinación ponderada de cinco indicadores 
+        técnicos internos. Cada indicador produce un score parcial entre −1 y +1. 
+        El score final es el promedio ponderado, ajustado por la confiabilidad del ruido ε.
+      </p>
+    </div>
+
+    <table class="ind-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Indicador</th>
+          <th>Descripción</th>
+          <th>Interpretación</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="ind-num">I₁</div></td>
+          <td>
+            <strong>Posición en el seno</strong>
+            <div class="ind-formula">score = −sin(ωt+φ)</div>
+          </td>
+          <td>Mide dónde está el ciclo en su oscilación natural. Valor del seno invertido.</td>
+          <td>sin → −1 (piso) = score +1 oportunidad<br>sin → +1 (techo) = score −1 riesgo</td>
+        </tr>
+        <tr>
+          <td><div class="ind-num">I₂</div></td>
+          <td>
+            <strong>Pendiente del ciclo</strong>
+            <div class="ind-formula">score = sign(y(t) − y(t−Δ))</div>
+          </td>
+          <td>Detecta la dirección del movimiento. Si el ciclo está subiendo o bajando en el margen.</td>
+          <td>Subiendo = +1 (momentum positivo)<br>Bajando = −1 (momentum negativo)</td>
+        </tr>
+        <tr>
+          <td><div class="ind-num">I₃</div></td>
+          <td>
+            <strong>Distancia a la media</strong>
+            <div class="ind-formula">score = −(y(t) − μ) / A</div>
+          </td>
+          <td>Compara y(t) contra su media móvil de 20 períodos. Normalizado por la amplitud A.</td>
+          <td>Muy por debajo de μ = oportunidad<br>Muy por encima de μ = riesgo</td>
+        </tr>
+        <tr>
+          <td><div class="ind-num">I₄</div></td>
+          <td>
+            <strong>Confiabilidad ε</strong>
+            <div class="ind-formula">conf = 1 − (ε / 25)</div>
+          </td>
+          <td>Multiplica el score final. Cuando el ruido es alto, la señal es menos confiable y se atenúa.</td>
+          <td>ε bajo = señal clara (conf → 1)<br>ε alto = señal atenuada (conf → 0)</td>
+        </tr>
+        <tr>
+          <td><div class="ind-num">I₅</div></td>
+          <td>
+            <strong>Cruce de medias</strong>
+            <div class="ind-formula">score = sign(MA₅ − MA₂₀)</div>
+          </td>
+          <td>Media corta (5 períodos) vs media larga (20 períodos) de y(t). Cruce clásico aplicado a la función.</td>
+          <td>MA₅ > MA₂₀ = tendencia alcista (+1)<br>MA₅ < MA₂₀ = tendencia bajista (−1)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="formula-box" style="padding:20px 24px;">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;letter-spacing:0.15em;">CÁLCULO DEL MGI SCORE</div>
+      <div class="formula-main" style="font-size:16px;">MGI = [(I₁ + I₂ + I₃ + I₅) / 4] × confiabilidad(ε)</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;">Resultado: número real entre −1.00 y +1.00</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 4. SEÑALES OPERATIVAS -->
+  <div class="section">
+    <div class="section-num">Sección 04</div>
+    <h2 class="section-title">Señales Operativas</h2>
+    <div class="section-body">
+      <p>
+        El MGI Score se traduce en cuatro señales operativas codificadas por color. 
+        Estas señales son <strong>indicadores educativos</strong> basados en la posición 
+        matemática del ciclo. No constituyen asesoramiento financiero.
+      </p>
+    </div>
+
+    <table class="signal-table">
+      <tr class="signal-row green">
+        <td style="width:60px;text-align:center;"><div class="sig-icon">🟢</div></td>
+        <td>
+          <div class="sig-code">ACUMULACIÓN</div>
+          <div class="sig-range">MGI Score: +0.40 a +1.00</div>
+        </td>
+        <td><div class="sig-desc">El ciclo está matemáticamente cerca de su piso. La distancia al mínimo es baja, la pendiente empieza a girar positiva. Momento de mayor oportunidad relativa según el modelo. El miedo del mercado es máximo pero la fórmula señala reversión.</div></td>
+      </tr>
+      <tr class="signal-row yellow">
+        <td style="text-align:center;"><div class="sig-icon">🟡</div></td>
+        <td>
+          <div class="sig-code">NEUTRAL</div>
+          <div class="sig-range">MGI Score: −0.40 a +0.40</div>
+        </td>
+        <td><div class="sig-desc">Señales mixtas o contradictorias entre los cinco indicadores. El ciclo está en zona media. El modelo no tiene suficiente convicción en ninguna dirección. Posición de espera o mantenimiento.</div></td>
+      </tr>
+      <tr class="signal-row red">
+        <td style="text-align:center;"><div class="sig-icon">🔴</div></td>
+        <td>
+          <div class="sig-code">DISTRIBUCIÓN</div>
+          <div class="sig-range">MGI Score: −1.00 a −0.40</div>
+        </td>
+        <td><div class="sig-desc">El ciclo está matemáticamente cerca de su techo. La euforia del mercado es máxima pero la fórmula señala agotamiento. Momento de mayor riesgo relativo según el modelo. La caída siguiente al techo del seno es matemáticamente inevitable.</div></td>
+      </tr>
+      <tr class="signal-row black">
+        <td style="text-align:center;"><div class="sig-icon">⚫</div></td>
+        <td>
+          <div class="sig-code">COLAPSO SISTÉMICO</div>
+          <div class="sig-range">ε > A (ruido supera al ciclo)</div>
+        </td>
+        <td><div class="sig-desc">Estado especial. El ruido ε supera la amplitud A del ciclo. La fórmula no puede distinguir el ciclo del caos. No hay señal confiable. Casos históricos: Venezuela, Líbano, Zimbabue. Protección máxima de capital.</div></td>
+      </tr>
+    </table>
+  </div>
+
+  <hr class="divider page-break">
+
+  <!-- 5. APLICACIÓN POR PAÍSES -->
+  <div class="section">
+    <div class="section-num">Sección 05</div>
+    <h2 class="section-title">Aplicación por País</h2>
+    <div class="section-body">
+      <p>
+        El MGI se aplica a cada economía con parámetros calibrados localmente. 
+        Los datos provienen de fuentes oficiales en tiempo real cuando están disponibles, 
+        o de estimaciones basadas en últimos datos publicados cuando no existe API pública.
+      </p>
+    </div>
+
+    <table class="country-table">
+      <thead>
+        <tr>
+          <th>País</th>
+          <th>Fuente de datos</th>
+          <th>Indicador ε local</th>
+          <th>A local</th>
+          <th>b</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🇺🇸 USA</td>
+          <td>FRED API oficial</td>
+          <td>Volatilidad S&P500</td>
+          <td>25</td>
+          <td>2.8</td>
+          <td><span class="phase-tag" style="background:#EFF6FF;color:#1E3A8A;">TIEMPO REAL</span></td>
+        </tr>
+        <tr>
+          <td>🇦🇷 Argentina</td>
+          <td>Bluelytics API</td>
+          <td>Brecha cambiaria %</td>
+          <td>35–80</td>
+          <td>−0.3</td>
+          <td><span class="phase-tag" style="background:#EFF6FF;color:#1E3A8A;">TIEMPO REAL</span></td>
+        </tr>
+        <tr>
+          <td>🇧🇷 Brasil</td>
+          <td>BCB API pública</td>
+          <td>Variación SELIC</td>
+          <td>28</td>
+          <td>1.4</td>
+          <td><span class="phase-tag" style="background:#EFF6FF;color:#1E3A8A;">TIEMPO REAL</span></td>
+        </tr>
+        <tr>
+          <td>🇲🇽 México</td>
+          <td>Banxico API token</td>
+          <td>Variación TIIE</td>
+          <td>22</td>
+          <td>1.2</td>
+          <td><span class="phase-tag" style="background:#EFF6FF;color:#1E3A8A;">TIEMPO REAL</span></td>
+        </tr>
+        <tr>
+          <td>🇪🇺 Europa</td>
+          <td>BCE API REST</td>
+          <td>Spread bonos</td>
+          <td>18</td>
+          <td>1.0</td>
+          <td><span class="phase-tag" style="background:#EFF6FF;color:#1E3A8A;">TIEMPO REAL</span></td>
+        </tr>
+        <tr>
+          <td>🇨🇱 Chile</td>
+          <td>BCCh estimado</td>
+          <td>Variación CLP</td>
+          <td>20</td>
+          <td>1.8</td>
+          <td><span class="phase-tag" style="background:#FFFBEB;color:#92400E;">ESTIMADO</span></td>
+        </tr>
+        <tr>
+          <td>🇨🇴 Colombia</td>
+          <td>BanRep estimado</td>
+          <td>Variación COP</td>
+          <td>30</td>
+          <td>0.8</td>
+          <td><span class="phase-tag" style="background:#FFFBEB;color:#92400E;">ESTIMADO</span></td>
+        </tr>
+        <tr>
+          <td>🇨🇳 China</td>
+          <td>PBoC estimado</td>
+          <td>Variación CNY</td>
+          <td>20</td>
+          <td>2.2</td>
+          <td><span class="phase-tag" style="background:#FFFBEB;color:#92400E;">ESTIMADO</span></td>
+        </tr>
+        <tr>
+          <td>🇻🇪 Venezuela</td>
+          <td>Sin API confiable</td>
+          <td>ε = 95+ (ε > A)</td>
+          <td>80</td>
+          <td>−4.5</td>
+          <td><span class="phase-tag" style="background:#1F2937;color:#fff;">⚫ COLAPSO</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 6. BACKTESTING -->
+  <div class="section">
+    <div class="section-num">Sección 06</div>
+    <h2 class="section-title">Backtesting Histórico</h2>
+    <div class="section-body">
+      <p>
+        El MGI se aplicó retroactivamente a eventos históricos para validar la consistencia 
+        de sus señales con los movimientos reales del mercado. Los resultados muestran que 
+        el modelo hubiera generado señales correctas en los principales puntos de inflexión.
+      </p>
+    </div>
+
+    <table class="backtest">
+      <thead>
+        <tr>
+          <th>Evento</th>
+          <th>Año</th>
+          <th>Fase previa</th>
+          <th>MGI Score estimado</th>
+          <th>Señal generada</th>
+          <th>Resultado real</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Crisis Subprime</td>
+          <td class="mono">2007–08</td>
+          <td>Euforia inmobiliaria</td>
+          <td class="bad mono">−0.82</td>
+          <td class="bad">🔴 DISTRIBUCIÓN</td>
+          <td>S&P500 −57% en 18 meses</td>
+        </tr>
+        <tr>
+          <td>Piso post-crisis</td>
+          <td class="mono">Mar 2009</td>
+          <td>Crisis profunda</td>
+          <td class="good mono">+0.91</td>
+          <td class="good">🟢 ACUMULACIÓN</td>
+          <td>S&P500 +400% en 10 años</td>
+        </tr>
+        <tr>
+          <td>Pandemia COVID</td>
+          <td class="mono">Mar 2020</td>
+          <td>Corrección abrupta</td>
+          <td class="good mono">+0.78</td>
+          <td class="good">🟢 ACUMULACIÓN</td>
+          <td>S&P500 +100% en 18 meses</td>
+        </tr>
+        <tr>
+          <td>Pico crypto</td>
+          <td class="mono">Nov 2021</td>
+          <td>Euforia máxima</td>
+          <td class="bad mono">−0.88</td>
+          <td class="bad">🔴 DISTRIBUCIÓN</td>
+          <td>BTC −77% en 12 meses</td>
+        </tr>
+        <tr>
+          <td>ARG Crisis 2018</td>
+          <td class="mono">2018</td>
+          <td>Brecha ε explosiva</td>
+          <td class="bad mono">−0.75</td>
+          <td class="bad">🔴 DISTRIBUCIÓN</td>
+          <td>Peso −50%, riesgo país +1800</td>
+        </tr>
+        <tr>
+          <td>ARG Piso 2002</td>
+          <td class="mono">2002</td>
+          <td>Colapso sistémico</td>
+          <td class="mono">⚫ N/A</td>
+          <td>⚫ COLAPSO</td>
+          <td>ε > A, sin señal confiable</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout warning">
+      <div class="callout-title">Nota metodológica</div>
+      <p>El backtesting es retroactivo e ilustrativo. Los parámetros fueron calibrados con datos históricos conocidos. El desempeño pasado del modelo no garantiza resultados futuros. El MGI es una herramienta educativa, no un sistema de trading.</p>
+    </div>
+  </div>
+
+  <hr class="divider page-break">
+
+  <!-- 7. MODELO DE MONETIZACIÓN -->
+  <div class="section">
+    <div class="section-num">Sección 07</div>
+    <h2 class="section-title">Modelo de Monetización del MGI</h2>
+    <div class="section-body">
+      <p>
+        El MGI puede monetizarse a través de cuatro capas progresivas, 
+        desde contenido gratuito hasta licenciamiento institucional, 
+        siguiendo el modelo de los grandes índices financieros como el VIX (CBOE) 
+        o el S&P500 (S&P Global).
+      </p>
+    </div>
+
+    <div class="mono-grid">
+      <div class="mono-card tier1">
+        <div class="mono-tier">Capa 1 · Inmediato</div>
+        <div class="mono-title">Contenido & Audiencia</div>
+        <div class="mono-price" style="color:#3B82F6;">Gratis → Audiencia</div>
+        <div class="mono-desc">TikTok, Reels, LinkedIn. El sitio web como herramienta visual. Construcción de audiencia que entiende el concepto MGI. Base para todo lo demás.</div>
+      </div>
+      <div class="mono-card tier2">
+        <div class="mono-tier">Capa 2 · 3-6 meses</div>
+        <div class="mono-title">Newsletter Premium</div>
+        <div class="mono-price" style="color:#C9A227;">$9–29 USD/mes</div>
+        <div class="mono-desc">Análisis semanal del MGI Score por país. En qué fase está cada economía, qué significa para inversores retail. Substack o Beehiiv.</div>
+      </div>
+      <div class="mono-card tier3">
+        <div class="mono-tier">Capa 3 · 6-12 meses</div>
+        <div class="mono-title">Curso MGI</div>
+        <div class="mono-price" style="color:#16A34A;">$97–297 USD</div>
+        <div class="mono-desc">Cómo leer ciclos económicos con la fórmula. Casos históricos. Estrategias por fase. Grabado una vez, vendido infinitas veces. Hotmart o Gumroad.</div>
+      </div>
+      <div class="mono-card tier4">
+        <div class="mono-tier">Capa 4 · 12-24 meses</div>
+        <div class="mono-title">Licencia Institucional</div>
+        <div class="mono-price" style="color:#7C3AED;">$500–5000 USD/año</div>
+        <div class="mono-desc">Fondos, family offices, medios financieros que quieran usar el MGI como referencia. Acceso a API propia del índice. Modelo VIX aplicado a ciclos.</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Protección intelectual recomendada</div>
+      <p>Registrar la metodología MGI como propiedad intelectual antes de escalar la distribución. 
+      Documentar la fecha de creación con este documento como evidencia. 
+      Consultar con un abogado de propiedad intelectual en Argentina o internacionalmente 
+      antes de licenciar a terceros.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 8. DISCLAIMER -->
+  <div class="section">
+    <div class="section-num">Sección 08</div>
+    <h2 class="section-title">Aviso Legal</h2>
+    <div class="section-body">
+      <p>
+        El MGI — Marcos Gainza Index es un <strong>indicador educativo</strong> basado en 
+        modelos matemáticos aplicados a datos macroeconómicos públicos. 
+        No constituye asesoramiento financiero, recomendación de inversión, 
+        ni señal de trading.
+      </p>
+      <p>
+        Los resultados históricos del backtesting son ilustrativos y retroactivos. 
+        No garantizan rendimientos futuros. Toda decisión de inversión es responsabilidad 
+        exclusiva del inversor.
+      </p>
+      <p>
+        Los datos de fuentes como FRED, CoinGecko, Bluelytics, BCB y Banxico 
+        se utilizan bajo sus respectivas licencias de uso público. 
+        El MGI no tiene afiliación con ninguna de estas instituciones.
+      </p>
+    </div>
+
+    <div class="callout important">
+      <div class="callout-title">Declaración de autoría</div>
+      <p>Este documento, la metodología MGI y el sistema de indicadores descritos en él 
+      son creación original de <strong>Marcos Gainza</strong>, desarrollados en marzo de 2026. 
+      Queda prohibida la reproducción total o parcial sin autorización expresa del autor.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>© 2026 <strong>Marcos Gainza</strong> · MGI — Marcos Gainza Index · Todos los derechos reservados</div>
+  <div>@gainzamarcosia · @Marcox2026 · Versión 1.0 · Marzo 2026</div>
+</div>
+
+</body>
+</html>

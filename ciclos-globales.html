@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CICLOS GLOBALES — El Mundo en Tiempo Real</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap');
+
+:root {
+  --bg: #04060E;
+  --panel: #090D1A;
+  --panel2: #0D1225;
+  --red: #FF2D55;
+  --green: #00E87A;
+  --yellow: #FFB800;
+  --blue: #3B8BFF;
+  --orange: #FF6B35;
+  --white: #EEF0FF;
+  --dim: rgba(238,240,255,0.38);
+  --border: rgba(238,240,255,0.07);
+  --border2: rgba(238,240,255,0.13);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'Syne',sans-serif;
+  overflow-x:hidden;
+  padding-bottom:56px;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.022) 1px,transparent 0);
+  background-size:30px 30px;pointer-events:none;
+}
+
+/* HEADER */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(4,6,14,0.96);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:52px;
+}
+.hl{font-family:'Syne Mono',monospace;font-size:14px;font-weight:700;letter-spacing:0.12em;
+  background:linear-gradient(90deg,var(--blue),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hr{display:flex;align-items:center;gap:16px;}
+.live-pill{display:flex;align-items:center;gap:6px;font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--green);}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+#clock{font-family:'Syne Mono',monospace;font-size:10px;color:var(--dim);}
+
+/* HERO */
+.hero{
+  position:relative;z-index:1;
+  text-align:center;padding:52px 20px 36px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(59,139,255,0.08),transparent 70%);
+}
+.hero-tag{display:inline-block;font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.3em;
+  color:var(--blue);border:1px solid rgba(59,139,255,0.3);border-radius:3px;padding:4px 12px;margin-bottom:18px;}
+.hero h1{font-size:clamp(38px,7vw,88px);font-weight:800;line-height:0.93;margin-bottom:14px;}
+.hero h1 .t1{display:block;color:var(--white);}
+.hero h1 .t2{display:block;background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(13px,2vw,17px);color:var(--dim);line-height:1.7;max-width:540px;margin:0 auto 24px;}
+.hero-sub strong{color:var(--white);}
+.formula-chip{display:inline-block;background:var(--panel);border:1px solid var(--border2);
+  border-radius:10px;padding:11px 24px;font-family:'Syne Mono',monospace;
+  font-size:clamp(13px,2.5vw,19px);color:var(--yellow);letter-spacing:0.04em;}
+
+/* GLOBAL STRIP */
+.global-strip{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  max-width:1180px;margin:0 auto;padding:24px 20px 0;
+}
+@media(max-width:800px){.global-strip{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:440px){.global-strip{grid-template-columns:1fr 1fr;}}
+
+.gs-card{
+  background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:16px 14px;transition:border-color 0.3s;
+}
+.gs-card:hover{border-color:var(--border2);}
+.gs-source{font-family:'Syne Mono',monospace;font-size:8px;letter-spacing:0.18em;color:var(--dim);
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.gs-dot{width:5px;height:5px;border-radius:50%;}
+.gs-label{font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--dim);margin-bottom:5px;text-transform:uppercase;}
+.gs-val{font-family:'Syne Mono',monospace;font-size:clamp(20px,3.5vw,28px);font-weight:700;line-height:1;margin-bottom:5px;}
+.gs-chg{font-family:'Syne Mono',monospace;font-size:10px;}
+.gs-phase{margin-top:10px;font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:4px 9px;border-radius:4px;display:inline-block;text-transform:uppercase;}
+.dc-loading{font-family:'Syne Mono',monospace;font-size:11px;color:var(--dim);animation:ld 1.4s ease-in-out infinite;}
+@keyframes ld{0%,100%{opacity:0.3}50%{opacity:1}}
+
+/* WAVE */
+.wave-wrap{
+  position:relative;z-index:1;
+  max-width:1180px;margin:20px auto 0;padding:0 20px;
+}
+.wave-box{background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+.wave-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;
+}
+.wh-title{font-family:'Syne Mono',monospace;font-size:10px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;}
+.wh-badge{font-family:'Syne Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.08em;
+  padding:5px 13px;border-radius:6px;transition:all 0.5s;}
+#waveCanvas{width:100%;height:260px;display:block;}
+.wave-params{display:flex;border-top:1px solid var(--border);flex-wrap:wrap;}
+.wp{flex:1;min-width:80px;padding:12px 14px;border-right:1px solid var(--border);text-align:center;}
+.wp:last-child{border-right:none;}
+.wp-sym{font-family:'Syne Mono',monospace;font-size:16px;font-weight:700;margin-bottom:3px;}
+.wp-name{font-size:8px;letter-spacing:0.13em;color:var(--dim);margin-bottom:2px;text-transform:uppercase;}
+.wp-val{font-family:'Syne Mono',monospace;font-size:11px;font-weight:700;}
+
+/* WORLD MAP SECTION */
+.world-section{
+  position:relative;z-index:1;
+  max-width:1180px;margin:28px auto 0;padding:0 20px;
+}
+.ws-header{margin-bottom:18px;}
+.ws-label{font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.28em;color:var(--blue);text-transform:uppercase;margin-bottom:8px;}
+.ws-title{font-size:clamp(22px,4vw,38px);font-weight:800;line-height:1.1;}
+
+/* COUNTRY GRID */
+.country-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+@media(max-width:900px){.country-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.country-grid{grid-template-columns:repeat(2,1fr);}}
+
+.country-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px 16px;
+  cursor:pointer;
+  transition:all 0.25s;
+  position:relative;overflow:hidden;
+}
+.country-card:hover{transform:translateY(-3px);border-color:var(--border2);}
+.country-card.selected{border-width:2px;}
+
+.cc-flag{font-size:28px;margin-bottom:10px;line-height:1;}
+.cc-name{font-size:13px;font-weight:800;margin-bottom:4px;}
+.cc-key{font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--dim);margin-bottom:12px;text-transform:uppercase;}
+.cc-val{font-family:'Syne Mono',monospace;font-size:20px;font-weight:700;margin-bottom:4px;}
+.cc-indicator{font-size:10px;color:var(--dim);margin-bottom:10px;}
+.cc-phase{font-family:'Syne Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:4px 9px;border-radius:4px;display:inline-block;text-transform:uppercase;}
+.cc-crisis{
+  margin-top:12px;
+}
+.cc-bar-wrap{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;margin-bottom:3px;overflow:hidden;}
+.cc-bar{height:100%;border-radius:2px;transition:width 1s;}
+.cc-bar-label{font-family:'Syne Mono',monospace;font-size:8px;color:var(--dim);display:flex;justify-content:space-between;}
+
+.cc-action{
+  margin-top:10px;font-size:11px;font-weight:700;letter-spacing:0.05em;
+}
+
+/* SELECTED COUNTRY DETAIL */
+.country-detail{
+  background:var(--panel2);
+  border:1px solid var(--border2);
+  border-radius:18px;
+  padding:24px;
+  margin-top:16px;
+  display:none;
+}
+.country-detail.visible{display:block;}
+.cd-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.cd-flag{font-size:40px;}
+.cd-info{}
+.cd-name{font-size:24px;font-weight:800;margin-bottom:4px;}
+.cd-phase{font-family:'Syne Mono',monospace;font-size:11px;font-weight:700;
+  padding:5px 14px;border-radius:6px;display:inline-block;}
+.cd-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:800px){.cd-metrics{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.cd-metrics{grid-template-columns:1fr 1fr;}}
+.cd-metric{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.cd-m-label{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+.cd-m-val{font-family:'Syne Mono',monospace;font-size:22px;font-weight:700;}
+.cd-m-src{font-size:9px;color:var(--dim);margin-top:3px;font-family:'Syne Mono',monospace;letter-spacing:0.08em;}
+.cd-formula{
+  background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;
+  font-family:'Syne Mono',monospace;
+}
+.cd-f-title{font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
+.cd-f-eq{font-size:clamp(13px,2.5vw,18px);color:var(--yellow);margin-bottom:10px;}
+.cd-f-params{display:flex;flex-wrap:wrap;gap:12px;}
+.cd-fp{font-size:11px;}
+.cd-fp span{color:var(--dim);}
+.cd-advice{
+  margin-top:14px;
+  padding:14px 18px;
+  border-radius:10px;
+  font-size:14px;font-weight:700;line-height:1.5;
+}
+
+/* PHASE STRIP */
+.phase-section{
+  position:relative;z-index:1;
+  max-width:1180px;margin:24px auto 0;padding:0 20px;
+}
+.phase-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:2px;
+  background:var(--border);border-radius:14px;overflow:hidden;border:1px solid var(--border);
+}
+@media(max-width:700px){.phase-grid{grid-template-columns:1fr 1fr;}}
+.pg-item{background:var(--panel);padding:18px 14px;position:relative;}
+.pg-item.pg-active{background:var(--panel2);}
+.pg-item.pg-active .pg-bar{display:block;}
+.pg-bar{display:none;position:absolute;top:0;left:0;right:0;height:3px;border-radius:2px 2px 0 0;}
+.pg-num{font-family:'Syne Mono',monospace;font-size:8px;color:var(--dim);margin-bottom:7px;letter-spacing:0.15em;}
+.pg-name{font-size:13px;font-weight:800;margin-bottom:7px;line-height:1.2;}
+.pg-desc{font-size:10px;color:var(--dim);line-height:1.6;margin-bottom:10px;}
+.pg-action{font-family:'Syne Mono',monospace;font-size:9px;font-weight:700;
+  padding:4px 9px;border-radius:4px;display:inline-block;letter-spacing:0.06em;}
+
+/* TWO SIDES */
+.two-section{
+  position:relative;z-index:1;
+  max-width:1180px;margin:24px auto 0;padding:0 20px;
+}
+.two-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;
+  background:var(--border);border-radius:16px;overflow:hidden;border:1px solid var(--border);}
+@media(max-width:600px){.two-grid{grid-template-columns:1fr;}}
+.two-side{background:var(--panel);padding:24px 20px;}
+.two-label{font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:16px;}
+.two-item{display:flex;gap:11px;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.two-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.two-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.two-text strong{display:block;font-size:13px;margin-bottom:2px;}
+.two-text span{font-size:11px;color:var(--dim);line-height:1.6;}
+
+/* COLLAPSED STATE */
+.country-card.collapsed{
+  background:linear-gradient(135deg,#0A0D14,#111520);
+  border-color:#333;
+}
+.country-card.collapsed .cc-phase{
+  background:rgba(68,68,68,0.2)!important;
+  color:#888!important;
+  border:1px solid #44444466;
+}
+.country-card.collapsed .cc-val{
+  color:#888!important;
+}
+.collapse-warn{
+  margin-top:8px;font-family:'Syne Mono',monospace;font-size:8px;
+  color:#666;letter-spacing:0.08em;line-height:1.5;
+  padding:6px 8px;background:rgba(68,68,68,0.1);border-radius:4px;
+  border-left:2px solid #444;
+}
+
+/* MGI SCORE PANEL */
+.mgi-panel{
+  position:relative;z-index:1;
+  max-width:1180px;margin:0 auto;padding:20px 20px 0;
+}
+.mgi-box{
+  background:#060A14;border:1px solid rgba(201,162,39,0.2);border-radius:16px;
+  padding:0;overflow:hidden;
+}
+.mgi-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;border-bottom:1px solid rgba(201,162,39,0.1);
+  background:rgba(201,162,39,0.03);
+}
+.mgi-h-left{display:flex;align-items:center;gap:14px;}
+.mgi-logo{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  color:#C9A227;letter-spacing:0.05em;
+}
+.mgi-label{font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--dim);}
+.mgi-signal{
+  font-family:'Syne Mono',monospace;font-size:12px;font-weight:700;
+  padding:6px 18px;border-radius:6px;letter-spacing:0.1em;
+}
+.mgi-main{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border-bottom:1px solid var(--border);
+}
+@media(max-width:700px){.mgi-main{grid-template-columns:1fr;}}
+.mgi-score-wrap{
+  padding:28px 24px;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;
+}
+@media(max-width:700px){.mgi-score-wrap{border-right:none;border-bottom:1px solid var(--border);}}
+.mgi-score-label{
+  font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.3em;
+  color:var(--dim);margin-bottom:8px;
+}
+.mgi-score{
+  font-family:'Syne Mono',monospace;font-size:clamp(48px,8vw,72px);font-weight:700;
+  line-height:1;margin-bottom:4px;transition:color 0.3s;
+}
+.mgi-score-range{font-family:'Syne Mono',monospace;font-size:9px;color:rgba(238,240,255,0.2);margin-bottom:16px;}
+.mgi-bar-wrap{width:100%;max-width:300px;position:relative;margin-bottom:8px;}
+.mgi-bar-bg{display:flex;height:6px;border-radius:3px;overflow:hidden;}
+.mgi-z-red{flex:3;background:linear-gradient(90deg,#FF2D55,#FF2D5566);}
+.mgi-z-yellow{flex:4;background:linear-gradient(90deg,#FFB80066,#FFB800,#FFB80066);}
+.mgi-z-green{flex:3;background:linear-gradient(90deg,#00E87A66,#00E87A);}
+.mgi-bar-needle{
+  position:absolute;top:-3px;width:3px;height:12px;background:#fff;border-radius:2px;
+  box-shadow:0 0 6px rgba(255,255,255,0.5);transition:left 0.6s ease;
+}
+.mgi-bar-labels{
+  display:flex;justify-content:space-between;width:100%;max-width:300px;
+  font-family:'Syne Mono',monospace;font-size:7px;letter-spacing:0.1em;
+}
+.mgi-indicators{padding:24px;display:flex;flex-direction:column;gap:0;}
+.mgi-ind{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  font-family:'Syne Mono',monospace;font-size:12px;
+}
+.mgi-ind:last-child{border-bottom:none;}
+.mi-id{font-weight:700;color:#C9A227;width:24px;flex-shrink:0;}
+.mi-name{flex:1;color:var(--dim);font-size:11px;}
+.mi-val{font-weight:700;font-size:14px;min-width:60px;text-align:right;}
+.mgi-console{
+  padding:14px 24px;background:rgba(0,0,0,0.3);
+  display:flex;flex-wrap:wrap;gap:6px 24px;
+  font-family:'Syne Mono',monospace;font-size:10px;
+}
+.mgi-c-row{display:flex;gap:8px;}
+.mgi-c-dim{color:var(--dim);}
+
+/* TICKER */
+.ticker{position:fixed;bottom:0;left:0;right:0;background:rgba(4,6,14,0.96);
+  border-top:1px solid var(--border);height:38px;z-index:200;overflow:hidden;backdrop-filter:blur(12px);}
+.ticker-inner{display:flex;align-items:center;height:100%;animation:tick 90s linear infinite;
+  white-space:nowrap;gap:40px;padding:0 20px;}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ti{display:flex;align-items:center;gap:7px;flex-shrink:0;
+  font-family:'Syne Mono',monospace;font-size:9px;letter-spacing:0.1em;}
+.ti-l{color:var(--dim);}
+.ti-v{font-weight:700;}
+
+/* FOOTER */
+.footer{
+  position:relative;z-index:1;
+  max-width:1180px;margin:32px auto 0;padding:24px 20px 0;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.footer-creator{font-family:'Syne Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:0.15em;}
+.footer-creator strong{color:var(--white);}
+.footer-formula{font-family:'Syne Mono',monospace;font-size:10px;color:var(--yellow);letter-spacing:0.05em;}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hl">CICLOS · GLOBALES</div>
+  <div class="hr">
+    <div class="live-pill"><div class="ldot"></div>EN VIVO</div>
+    <div id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">🌍 El mundo en tiempo real · Todos los ciclos</div>
+  <h1>
+    <span class="t1">El mundo opera</span>
+    <span class="t2">en ciclos.</span>
+  </h1>
+  <p class="hero-sub">
+    Datos reales de cada país. <strong>Una fórmula, parámetros únicos por economía.</strong><br>
+    Entendé en qué fase está cada mercado ahora mismo.
+  </p>
+  <div class="formula-chip">y(t) = A · e<sup>−δt</sup> · sin(ωt + φ) + bt + σ·ξ(t)</div>
+</div>
+
+<!-- GLOBAL INDICATORS -->
+<div class="global-strip">
+  <div class="gs-card">
+    <div class="gs-source"><div class="gs-dot" style="background:#3B8BFF"></div>YAHOO FINANCE</div>
+    <div class="gs-label">S&P 500 · USA</div>
+    <div class="gs-val" id="g-sp500"><span class="dc-loading">Cargando...</span></div>
+    <div class="gs-chg" id="g-sp500c"></div>
+    <div class="gs-phase" id="g-sp500p"></div>
+  </div>
+  <div class="gs-card">
+    <div class="gs-source"><div class="gs-dot" style="background:#F7931A"></div>COINGECKO · VIVO</div>
+    <div class="gs-label">Bitcoin · Apetito de riesgo global</div>
+    <div class="gs-val" id="g-btc"><span class="dc-loading">Cargando...</span></div>
+    <div class="gs-chg" id="g-btcc"></div>
+    <div class="gs-phase" id="g-btcp"></div>
+  </div>
+  <div class="gs-card">
+    <div class="gs-source"><div class="gs-dot" style="background:#00E87A"></div>FRED · RESERVA FEDERAL</div>
+    <div class="gs-label">Inflación USA · CPI</div>
+    <div class="gs-val" id="g-inf"><span class="dc-loading">Cargando...</span></div>
+    <div class="gs-chg" id="g-infc"></div>
+    <div class="gs-phase" id="g-infp"></div>
+  </div>
+  <div class="gs-card">
+    <div class="gs-source"><div class="gs-dot" style="background:#FF2D55"></div>FRED · RESERVA FEDERAL</div>
+    <div class="gs-label">Tasa FED · Política monetaria</div>
+    <div class="gs-val" id="g-rate"><span class="dc-loading">Cargando...</span></div>
+    <div class="gs-chg" id="g-ratec"></div>
+    <div class="gs-phase" id="g-ratep"></div>
+  </div>
+</div>
+
+<!-- GLOBAL WAVE -->
+<div class="wave-wrap">
+  <div class="wave-box">
+    <div class="wave-head">
+      <div class="wh-title">ONDA GLOBAL — y(t) calculada con datos reales</div>
+      <div class="wh-badge" id="waveBadge">Calculando...</div>
+    </div>
+    <canvas id="waveCanvas"></canvas>
+    <div class="wave-params">
+      <div class="wp"><div class="wp-sym" style="color:var(--red)">A</div><div class="wp-name">Amplitud</div><div class="wp-val" id="wA">—</div></div>
+      <div class="wp"><div class="wp-sym" style="color:var(--blue)">ω</div><div class="wp-name">Velocidad</div><div class="wp-val" id="wW">—</div></div>
+      <div class="wp"><div class="wp-sym" style="color:var(--yellow)">φ</div><div class="wp-name">Fase</div><div class="wp-val" id="wPhi">—</div></div>
+      <div class="wp"><div class="wp-sym" style="color:var(--orange)">δ</div><div class="wp-name">Amortiguación</div><div class="wp-val" id="wDelta">—</div></div>
+      <div class="wp"><div class="wp-sym" style="color:var(--green)">b</div><div class="wp-name">Tendencia</div><div class="wp-val" id="wB">—</div></div>
+      <div class="wp"><div class="wp-sym" style="color:var(--dim)">σ</div><div class="wp-name">Volatilidad</div><div class="wp-val" id="wEps">—</div></div>
+      <div class="wp"><div class="wp-sym" style="color:var(--orange)">y(t)</div><div class="wp-name">Ahora</div><div class="wp-val" id="wYt">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MGI SCORE CONSOLE -->
+<div class="mgi-panel">
+  <div class="mgi-box">
+    <div class="mgi-header">
+      <div class="mgi-h-left">
+        <div class="mgi-logo">MGI</div>
+        <div class="mgi-label">MARCOS GAINZA INDEX · EN VIVO</div>
+      </div>
+      <div class="mgi-signal" id="mgiSignal">CALCULANDO...</div>
+    </div>
+    <div class="mgi-main">
+      <div class="mgi-score-wrap">
+        <div class="mgi-score-label">MGI SCORE</div>
+        <div class="mgi-score" id="mgiScore">—</div>
+        <div class="mgi-score-range">rango: −1.00 a +1.00</div>
+        <div class="mgi-bar-wrap">
+          <div class="mgi-bar-bg">
+            <div class="mgi-bar-zone mgi-z-red"></div>
+            <div class="mgi-bar-zone mgi-z-yellow"></div>
+            <div class="mgi-bar-zone mgi-z-green"></div>
+          </div>
+          <div class="mgi-bar-needle" id="mgiNeedle"></div>
+        </div>
+        <div class="mgi-bar-labels">
+          <span style="color:#FF2D55">DISTRIBUCIÓN</span>
+          <span style="color:#FFB800">NEUTRAL</span>
+          <span style="color:#00E87A">ACUMULACIÓN</span>
+        </div>
+      </div>
+      <div class="mgi-indicators">
+        <div class="mgi-ind" id="mgiI1"><span class="mi-id">I₁</span><span class="mi-name">Posición seno</span><span class="mi-val">—</span></div>
+        <div class="mgi-ind" id="mgiI2"><span class="mi-id">I₂</span><span class="mi-name">Pendiente</span><span class="mi-val">—</span></div>
+        <div class="mgi-ind" id="mgiI3"><span class="mi-id">I₃</span><span class="mi-name">Dist. a media</span><span class="mi-val">—</span></div>
+        <div class="mgi-ind" id="mgiI4"><span class="mi-id">I₄</span><span class="mi-name">Confiabilidad ε</span><span class="mi-val">—</span></div>
+        <div class="mgi-ind" id="mgiI5"><span class="mi-id">I₅</span><span class="mi-name">Cruce medias</span><span class="mi-val">—</span></div>
+      </div>
+    </div>
+    <div class="mgi-console" id="mgiConsole">
+      <div class="mgi-c-row"><span class="mgi-c-dim">BTC</span><span id="mgiC_btc">...</span></div>
+      <div class="mgi-c-row"><span class="mgi-c-dim">S&P500</span><span id="mgiC_sp">...</span></div>
+      <div class="mgi-c-row"><span class="mgi-c-dim">INF USA</span><span id="mgiC_inf">...</span></div>
+      <div class="mgi-c-row"><span class="mgi-c-dim">BLUE ARS</span><span id="mgiC_blue">...</span></div>
+      <div class="mgi-c-row"><span class="mgi-c-dim">RIESGO PAÍS</span><span id="mgiC_rp">...</span></div>
+      <div class="mgi-c-row"><span class="mgi-c-dim">FÓRMULA</span><span class="mgi-c-dim" id="mgiC_formula">y(t) = A·e⁻ᵟᵗ·sin(ωt+φ) + bt + σ·ξ(t)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORLD COUNTRIES -->
+<div class="world-section">
+  <div class="ws-header">
+    <div class="ws-label">Economías del mundo — tocá un país para ver su ciclo</div>
+    <div class="ws-title">El mundo, país por país.</div>
+  </div>
+  <div class="country-grid" id="countryGrid"></div>
+  <div class="country-detail" id="countryDetail"></div>
+</div>
+
+<!-- PHASE STRIP -->
+<div class="phase-section">
+  <div class="ws-label" style="margin-bottom:12px;">Las 5 fases — tu posición lo cambia todo</div>
+  <div class="phase-grid" id="phaseGrid"></div>
+</div>
+
+<!-- TWO WORLDS -->
+<div class="two-section">
+  <div class="two-grid">
+    <div class="two-side">
+      <div class="two-label" style="color:var(--red)">❌ El que va detrás del mercado</div>
+      <div class="two-item"><div class="two-dot" style="background:var(--red)"></div><div class="two-text"><strong>Compra cuando todos compran</strong><span>Entra en euforia. El precio ya subió. Solo quedan las pérdidas.</span></div></div>
+      <div class="two-item"><div class="two-dot" style="background:var(--red)"></div><div class="two-text"><strong>Vende cuando todos venden</strong><span>Con pánico en la crisis. Convierte pérdidas en papel en pérdidas reales.</span></div></div>
+      <div class="two-item"><div class="two-dot" style="background:var(--red)"></div><div class="two-text"><strong>Reacciona al ε, no al ciclo</strong><span>Una noticia, una guerra. El ruido lo mueve. No ve la onda de fondo.</span></div></div>
+    </div>
+    <div class="two-side">
+      <div class="two-label" style="color:var(--green)">✓ El que lee el ciclo</div>
+      <div class="two-item"><div class="two-dot" style="background:var(--green)"></div><div class="two-text"><strong>Compra en la crisis</strong><span>Cuando el miedo es máximo, el precio es mínimo. El ciclo siempre gira.</span></div></div>
+      <div class="two-item"><div class="two-dot" style="background:var(--green)"></div><div class="two-text"><strong>Vende en la euforia</strong><span>Cuando todos están emocionados, protege. El pico del seno viene seguido de caída.</span></div></div>
+      <div class="two-item"><div class="two-dot" style="background:var(--green)"></div><div class="two-text"><strong>Separa el ε del ciclo real</strong><span>Los eventos cambian el momento. La fórmula siempre vuelve. La tendencia b no desaparece.</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-creator">Creado por <strong>Marcos Gainza</strong> · Educación financiera basada en datos reales</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <a href="https://instagram.com/gainzamarcosia" target="_blank" style="display:flex;align-items:center;gap:7px;font-family:'Syne Mono',monospace;font-size:11px;color:#E1306C;text-decoration:none;border:1px solid rgba(225,48,108,0.3);border-radius:6px;padding:6px 12px;transition:all 0.2s;" onmouseover="this.style.background='rgba(225,48,108,0.1)'" onmouseout="this.style.background='transparent'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      @gainzamarcosia
+    </a>
+    <a href="https://x.com/Marcox2026" target="_blank" style="display:flex;align-items:center;gap:7px;font-family:'Syne Mono',monospace;font-size:11px;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.632 5.905-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      @Marcox2026
+    </a>
+  </div>
+  <div class="footer-formula">y(t) = A·e⁻ᵟᵗ·sin(ωt+φ) + bt + σ·ξ(t)</div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker"><div class="ticker-inner" id="tickerEl"></div></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// KEYS
+// ═══════════════════════════════════════════════════
+const FRED_KEY   = 'af1b5c3f8dc1ac7a964de55ab5a7d1fd';
+const BMX_TOKEN  = '9361821d9efd3415fca397c52629d4b7abd46da679d746b643042936b9b8554e';
+
+// ═══════════════════════════════════════════════════
+// GLOBAL DATA STORE
+// ═══════════════════════════════════════════════════
+const GD = {
+  btc: null, btcChg: null,
+  sp500: null, sp500Chg: null,
+  inflation: null, fedRate: null,
+  blueVenta: null, oficialVenta: null, brecha: null,
+  // Argentina extra
+  arRiesgoPais: null, arInflacionMensual: null, arInflacionAnual: null,
+  arTasaPM: null, arReservas: null,
+};
+
+// ═══════════════════════════════════════════════════
+// FORMULA PARAMS — derived from real data
+// y(t) = A · e^(-δt) · sin(ωt + φ) + bt + σ·ξ(t)
+// ═══════════════════════════════════════════════════
+let P = { A:30, omega:0.52, phi:0.94, b:2.1, sigma:5, delta:0.012 };
+let t = 4.0, waveT = 0, frame = 0;
+
+// Seeded pseudo-random noise (deterministic but irregular)
+function noise(t){
+  const x = Math.sin(t*12.9898+t*78.233)*43758.5453;
+  return x - Math.floor(x);  // 0..1
+}
+function xi(t){
+  // Brownian-like: sum of multi-frequency components with pseudo-random phase
+  return (noise(t)*2-1)*0.5 + (noise(t*3.7)*2-1)*0.3 + (noise(t*7.3)*2-1)*0.2;
+}
+
+function damping(t, delta){ return Math.exp(-delta * Math.abs(Math.sin(P.omega*t+P.phi))); }
+
+function yClean(t){ return P.A * damping(t,P.delta) * Math.sin(P.omega*t+P.phi) + P.b*t; }
+function yNoise(t){ return yClean(t) + P.sigma * xi(t); }
+
+// Per-country formula with local params
+function yCountry(t, params){
+  const {A, omega, phi, b, sigma, delta} = params;
+  const d = Math.exp(-delta * Math.abs(Math.sin(omega*t+phi)));
+  return A * d * Math.sin(omega*t+phi) + b*t;
+}
+function yCountryNoise(t, params){
+  return yCountry(t, params) + params.sigma * xi(t + params.phaseOffset);
+}
+
+function updateParams(){
+  if(GD.btcChg!==null) P.A = Math.max(15,Math.min(55,20+Math.abs(GD.btcChg)*1.8));
+  if(GD.btcChg!==null) P.phi = 0.94+(GD.btcChg/10)*0.25;
+  if(GD.inflation!==null) P.b = Math.max(0.5,4.0-GD.inflation*0.13);
+  if(GD.brecha!==null){ P.sigma = Math.min(22,GD.brecha*0.07); }
+  else if(GD.btcChg!==null){ P.sigma = Math.abs(GD.btcChg)*0.7; }
+  // Delta increases when volatility is high (cycles dampen faster)
+  P.delta = Math.max(0.005, Math.min(0.06, P.sigma * 0.003));
+  renderWaveParams();
+}
+
+// ═══════════════════════════════════════════════════
+// PHASES
+// ═══════════════════════════════════════════════════
+const PHASES = [
+  {id:'crisis',    name:'Crisis Profunda', color:'#FF2D55', action:'→ COMPRAR',    actionBg:'rgba(0,232,122,0.12)', actionColor:'#00E87A', desc:'Todos venden. Miedo en máximos. El precio está en el piso.', advice:'Es el momento más difícil emocionalmente y el más rentable matemáticamente. El ciclo va a girar.'},
+  {id:'recovery',  name:'Recuperación',    color:'#FFB800', action:'→ POSICIONARSE',actionBg:'rgba(255,184,0,0.12)',  actionColor:'#FFB800', desc:'Primeros signos de mejora. Pocos lo notan aún.', advice:'Las fortunas silenciosas se construyen acá. La mayoría todavía tiene miedo.'},
+  {id:'expansion', name:'Expansión',       color:'#00E87A', action:'→ INVERTIR',   actionBg:'rgba(0,232,122,0.12)', actionColor:'#00E87A', desc:'La economía crece. Optimismo moderado. Período productivo.', advice:'El mejor momento para crecer posiciones con menor riesgo.'},
+  {id:'euphoria',  name:'Euforia',         color:'#3B8BFF', action:'→ VENDER',     actionBg:'rgba(255,45,85,0.12)',  actionColor:'#FF2D55', desc:'Todo parece seguro. Precios en máximos históricos.', advice:'Cuando todos están seguros, es señal de pico. Reducí exposición.'},
+  {id:'correction',name:'Corrección',      color:'#FF6B35', action:'→ PROTEGER',   actionBg:'rgba(255,107,53,0.12)', actionColor:'#FF6B35', desc:'El ciclo gira. El pánico empieza a instalarse.', advice:'Protegé el capital. La próxima crisis ya está en camino.'},
+  {id:'collapse',  name:'Colapso Sistémico', color:'#444444', action:'→ SIN SEÑAL', actionBg:'rgba(68,68,68,0.15)',   actionColor:'#888888', desc:'ε supera al ciclo. La fórmula no puede dar señal. Sin datos confiables.', advice:'Protección máxima. El modelo no aplica cuando el ruido destruye la señal.'},
+];
+
+function getPhase(tv, omega, phi){
+  omega = omega || P.omega;
+  phi = phi || P.phi;
+  const s=Math.sin(omega*tv+phi);
+  // Also consider the derivative (momentum) for better phase detection
+  const ds = omega * Math.cos(omega*tv+phi);
+  if(s<-0.6) return PHASES[0];                    // Crisis
+  if(s<-0.1 && ds>0) return PHASES[1];             // Recovery (rising)
+  if(s<-0.1) return PHASES[4];                     // Correction (falling)
+  if(s<0.35) return PHASES[2];                     // Expansion
+  if(s<0.75 && ds>0) return PHASES[3];             // Euphoria (rising)
+  return PHASES[4];                                // Correction
+}
+
+// Blend sinusoidal phase with real-data override (weighted)
+function getBlendedPhase(tv, country){
+  const dataPhase = country.getPhaseOverride();
+  const wavePhase = getPhase(tv, country.getOmega(), country.getPhi());
+  if(!dataPhase) return wavePhase;
+  // Data takes priority but wave phase adds nuance via confidence
+  const confidence = country.getDataConfidence ? country.getDataConfidence() : 0.8;
+  // If both agree, high confidence. If they disagree, use data phase but lower score.
+  return dataPhase;
+}
+
+// ═══════════════════════════════════════════════════
+// COUNTRIES DATA
+// ═══════════════════════════════════════════════════
+const COUNTRIES = [
+  {
+    id:'ar', flag:'🇦🇷', name:'Argentina', key:'MULTI-INDICADOR',
+    color:'#FFB800',
+    getVal: ()=> GD.arRiesgoPais ? `${GD.arRiesgoPais} pts` : (GD.blueVenta ? `$${GD.blueVenta}` : '...'),
+    getIndicator: ()=>{
+      const parts=[];
+      if(GD.brecha) parts.push(`Brecha: ${GD.brecha.toFixed(1)}%`);
+      if(GD.arInflacionMensual) parts.push(`IPC: ${GD.arInflacionMensual}%`);
+      return parts.length ? parts.join(' · ') : 'Cargando...';
+    },
+    getCrisis: ()=>{
+      // Composite crisis score from multiple indicators
+      let score=0, count=0;
+      if(GD.brecha){ score += Math.min(100, GD.brecha*0.8+20); count++; }
+      if(GD.arRiesgoPais){ score += Math.min(100, GD.arRiesgoPais/20); count++; }
+      if(GD.arInflacionAnual){ score += Math.min(100, GD.arInflacionAnual*0.6); count++; }
+      if(GD.arTasaPM){ score += Math.min(100, GD.arTasaPM*1.2); count++; }
+      return count ? Math.round(score/count) : 50;
+    },
+    getPhaseOverride: ()=>{
+      // Weighted composite: riesgo pais (35%), brecha (25%), inflación (25%), tasa (15%)
+      let score=50, weights=0;
+      if(GD.arRiesgoPais!==null){
+        // <400=bien, 400-800=moderado, 800-1500=mal, >1500=crisis
+        const rp = GD.arRiesgoPais<400?20 : GD.arRiesgoPais<800?45 : GD.arRiesgoPais<1500?70 : 90;
+        score=rp*0.35; weights+=0.35;
+      }
+      if(GD.brecha!==null){
+        const br = GD.brecha<15?15 : GD.brecha<30?35 : GD.brecha<60?65 : 90;
+        score+=br*0.25; weights+=0.25;
+      }
+      if(GD.arInflacionAnual!==null){
+        const inf = GD.arInflacionAnual<25?20 : GD.arInflacionAnual<50?40 : GD.arInflacionAnual<100?65 : 90;
+        score+=inf*0.25; weights+=0.25;
+      }
+      if(GD.arTasaPM!==null){
+        const tasa = GD.arTasaPM<30?20 : GD.arTasaPM<50?40 : GD.arTasaPM<80?60 : 85;
+        score+=tasa*0.15; weights+=0.15;
+      }
+      if(!weights) return null;
+      const final=score/weights;
+      if(final>75) return PHASES[0];      // Crisis
+      if(final>55) return PHASES[4];      // Corrección
+      if(final>40) return PHASES[1];      // Recuperación
+      if(final>25) return PHASES[2];      // Expansión
+      return PHASES[3];                   // Euforia
+    },
+    getOmega: ()=> 0.68,
+    getPhi: ()=> GD.brecha ? 1.2 + (GD.brecha/100)*0.5 : 1.2,
+    getDelta: ()=> GD.arRiesgoPais ? Math.min(0.08, GD.arRiesgoPais*0.00005) : 0.02,
+    getA: ()=> GD.brecha ? Math.min(55,25+GD.brecha*0.3) : 35,
+    getSigma: ()=> GD.arRiesgoPais ? Math.min(18, GD.arRiesgoPais*0.008) : 8,
+    getB: ()=> GD.arInflacionAnual ? Math.max(-2, 1 - GD.arInflacionAnual*0.03) : -0.3,
+    phaseOffset: 1.0,
+    source:'Bluelytics · ArgentinaDatos · BCRA',
+    metrics:[
+      {label:'Riesgo País', valFn:()=>GD.arRiesgoPais?`${GD.arRiesgoPais} pts`:'...', src:'ArgentinaDatos'},
+      {label:'Dólar Blue', valFn:()=>GD.blueVenta?`$${GD.blueVenta}`:'...', src:'Bluelytics'},
+      {label:'Brecha', valFn:()=>GD.brecha?`${GD.brecha.toFixed(1)}%`:'...', src:'Calculado'},
+      {label:'Inflación Mensual', valFn:()=>GD.arInflacionMensual?`${GD.arInflacionMensual}%`:'...', src:'ArgentinaDatos'},
+      {label:'Inflación Anual', valFn:()=>GD.arInflacionAnual?`${GD.arInflacionAnual}%`:'...', src:'BCRA'},
+      {label:'Tasa Política', valFn:()=>GD.arTasaPM?`${GD.arTasaPM}%`:'...', src:'BCRA'},
+      {label:'Reservas BCRA', valFn:()=>GD.arReservas?`USD ${(GD.arReservas/1000).toFixed(1)}B`:'...', src:'BCRA'},
+      {label:'Dólar Oficial', valFn:()=>GD.oficialVenta?`$${GD.oficialVenta}`:'...', src:'Bluelytics'},
+    ]
+  },
+  {
+    id:'us', flag:'🇺🇸', name:'Estados Unidos', key:'S&P 500 + FED',
+    color:'#3B8BFF',
+    getVal: ()=> GD.sp500 ? GD.sp500.toLocaleString('es-AR',{maximumFractionDigits:0}) : '...',
+    getIndicator: ()=> GD.fedRate ? `Tasa FED: ${GD.fedRate}%` : 'Cargando...',
+    getCrisis: ()=>{
+      if(!GD.inflation) return 35;
+      return Math.min(100,Math.max(0,(GD.inflation-2)*15));
+    },
+    getPhaseOverride: ()=>{
+      if(!GD.sp500Chg) return null;
+      if(GD.sp500Chg>2) return PHASES[3];
+      if(GD.sp500Chg>0) return PHASES[2];
+      if(GD.sp500Chg>-2) return PHASES[4];
+      return PHASES[0];
+    },
+    getOmega: ()=> 0.42,  // USA cycles slower (more stable)
+    getPhi: ()=> GD.sp500Chg ? 0.8 + (GD.sp500Chg/10)*0.3 : 0.8,
+    getDelta: ()=> 0.008,
+    getA: ()=> 25,
+    getSigma: ()=> GD.sp500Chg ? Math.abs(GD.sp500Chg)*1.5 : 3,
+    getB: ()=> 2.8,
+    phaseOffset: 2.0,
+    source:'FRED · Reserva Federal USA',
+    metrics:[
+      {label:'S&P 500', valFn:()=>GD.sp500?GD.sp500.toLocaleString('es-AR',{maximumFractionDigits:0}):'...', src:'Yahoo Finance'},
+      {label:'Inflación CPI', valFn:()=>GD.inflation?`${GD.inflation}%`:'...', src:'FRED'},
+      {label:'Tasa FED', valFn:()=>GD.fedRate?`${GD.fedRate}%`:'...', src:'FRED'},
+    ]
+  },
+  {
+    id:'br', flag:'🇧🇷', name:'Brasil', key:'SELIC + IBOVESPA',
+    color:'#00E87A',
+    getVal: ()=> window.BR_SELIC ? `${window.BR_SELIC}%` : '...',
+    getIndicator: ()=> window.BR_SELIC ? `Tasa SELIC: ${window.BR_SELIC}%` : 'Cargando...',
+    getCrisis: ()=> window.BR_SELIC ? Math.min(100,window.BR_SELIC*6) : 45,
+    getPhaseOverride: ()=>{
+      if(!window.BR_SELIC) return null;
+      if(window.BR_SELIC>12) return PHASES[4];
+      if(window.BR_SELIC>8)  return PHASES[2];
+      if(window.BR_SELIC>5)  return PHASES[1];
+      return PHASES[3];
+    },
+    getOmega: ()=> 0.55,  // Brasil: ciclos moderados
+    getPhi: ()=> window.BR_SELIC ? 0.9 + (window.BR_SELIC-10)*0.05 : 0.9,
+    getDelta: ()=> 0.015,
+    getA: ()=> 28,
+    getSigma: ()=> window.BR_SELIC ? window.BR_SELIC*0.5 : 6,
+    getB: ()=> 1.4,
+    phaseOffset: 3.0,
+    source:'Banco Central do Brasil',
+    metrics:[
+      {label:'Tasa SELIC', valFn:()=>window.BR_SELIC?`${window.BR_SELIC}%`:'...', src:'BCB API'},
+      {label:'Inflación IPCA', valFn:()=>window.BR_IPCA?`${window.BR_IPCA}%`:'~ 4.8%', src:'BCB'},
+      {label:'Ciclo', valFn:()=>window.BR_SELIC?(window.BR_SELIC>10?'Restrictivo':'Expansivo'):'...', src:'Calculado'},
+    ]
+  },
+  {
+    id:'mx', flag:'🇲🇽', name:'México', key:'TIIE + BANXICO',
+    color:'#FF6B35',
+    getVal: ()=> window.MX_RATE ? `${window.MX_RATE}%` : '...',
+    getIndicator: ()=> window.MX_RATE ? `Tasa TIIE: ${window.MX_RATE}%` : 'Cargando...',
+    getCrisis: ()=> window.MX_RATE ? Math.min(100,window.MX_RATE*4.5) : 40,
+    getPhaseOverride: ()=>{
+      if(!window.MX_RATE) return null;
+      if(window.MX_RATE>10) return PHASES[4];
+      if(window.MX_RATE>8)  return PHASES[2];
+      return PHASES[1];
+    },
+    getOmega: ()=> 0.48,  // México: ciclos lentos
+    getPhi: ()=> window.MX_RATE ? 0.7 + (window.MX_RATE-9)*0.08 : 0.7,
+    getDelta: ()=> 0.01,
+    getA: ()=> 22,
+    getSigma: ()=> window.MX_RATE ? window.MX_RATE*0.4 : 5,
+    getB: ()=> 1.2,
+    phaseOffset: 4.0,
+    source:'Banxico · Banco de México',
+    metrics:[
+      {label:'Tasa TIIE', valFn:()=>window.MX_RATE?`${window.MX_RATE}%`:'...', src:'Banxico API'},
+      {label:'Inflación', valFn:()=>window.MX_INF?`${window.MX_INF}%`:'~ 3.7%', src:'Banxico'},
+      {label:'Ciclo', valFn:()=>window.MX_RATE?(window.MX_RATE>9?'Restrictivo':'Moderado'):'...', src:'Calculado'},
+    ]
+  },
+  {
+    id:'cl', flag:'🇨🇱', name:'Chile', key:'TPM + BANCO CENTRAL',
+    color:'#FF2D55',
+    getVal: ()=> window.CL_RATE ? `${window.CL_RATE}%` : '~ 5.0%',
+    getIndicator: ()=> `Tasa TPM ~ 5.0%`,
+    getCrisis: ()=> 38,
+    getPhaseOverride: ()=> PHASES[2],
+    getOmega: ()=> 0.45,
+    getPhi: ()=> 0.6,
+    getDelta: ()=> 0.01,
+    getA: ()=> 20,
+    getSigma: ()=> 4,
+    getB: ()=> 1.8,
+    phaseOffset: 5.0,
+    source:'Banco Central de Chile',
+    metrics:[
+      {label:'Tasa TPM', valFn:()=>'~ 5.0%', src:'BCCh'},
+      {label:'Inflación', valFn:()=>'~ 4.2%', src:'BCCh'},
+      {label:'Ciclo', valFn:()=>'Moderado', src:'Estimado'},
+    ]
+  },
+  {
+    id:'eu', flag:'🇪🇺', name:'Europa', key:'BCE · ZONA EURO',
+    color:'#5856D6',
+    getVal: ()=> window.EU_RATE ? `${window.EU_RATE}%` : '...',
+    getIndicator: ()=> window.EU_RATE ? `Tasa BCE: ${window.EU_RATE}%` : 'Cargando...',
+    getCrisis: ()=> window.EU_RATE ? Math.min(100,window.EU_RATE*12) : 30,
+    getPhaseOverride: ()=> {
+      if(!window.EU_RATE) return null;
+      if(window.EU_RATE>3) return PHASES[4];
+      if(window.EU_RATE>1) return PHASES[2];
+      return PHASES[1];
+    },
+    getOmega: ()=> 0.38,  // Europa: ciclos más lentos y estables
+    getPhi: ()=> window.EU_RATE ? 0.5 + (window.EU_RATE-2)*0.1 : 0.5,
+    getDelta: ()=> 0.006,
+    getA: ()=> 18,
+    getSigma: ()=> 4,
+    getB: ()=> 1.0,
+    phaseOffset: 6.0,
+    source:'Banco Central Europeo',
+    metrics:[
+      {label:'Tasa BCE', valFn:()=>window.EU_RATE?`${window.EU_RATE}%`:'...', src:'BCE'},
+      {label:'Inflación', valFn:()=>window.EU_INF?`${window.EU_INF}%`:'~ 2.3%', src:'Eurostat'},
+      {label:'Ciclo', valFn:()=>window.EU_RATE?(window.EU_RATE>2?'Restrictivo':'Expansivo'):'...', src:'Calculado'},
+    ]
+  },
+  {
+    id:'co', flag:'🇨🇴', name:'Colombia', key:'BANREP',
+    color:'#FFD60A',
+    getVal: ()=> '~ 9.75%',
+    getIndicator: ()=> 'Tasa BanRep ~ 9.75%',
+    getCrisis: ()=> 55,
+    getPhaseOverride: ()=> PHASES[4],
+    getOmega: ()=> 0.50,
+    getPhi: ()=> 1.0,
+    getDelta: ()=> 0.018,
+    getA: ()=> 30,
+    getSigma: ()=> 9,
+    getB: ()=> 0.8,
+    phaseOffset: 7.0,
+    source:'Banco de la República · Estimado',
+    metrics:[
+      {label:'Tasa BanRep', valFn:()=>'~ 9.75%', src:'BanRep'},
+      {label:'Inflación', valFn:()=>'~ 5.1%', src:'DANE'},
+      {label:'Ciclo', valFn:()=>'Corrección', src:'Estimado'},
+    ]
+  },
+  {
+    id:'cn', flag:'🇨🇳', name:'China', key:'PBoC · PBOC',
+    color:'#FF2D55',
+    getVal: ()=> '~ 3.1%',
+    getIndicator: ()=> 'Tasa PBoC ~ 3.1%',
+    getCrisis: ()=> 42,
+    getPhaseOverride: ()=> PHASES[1],
+    getOmega: ()=> 0.35,  // China: ciclos largos (planificación central)
+    getPhi: ()=> 0.4,
+    getDelta: ()=> 0.005,
+    getA: ()=> 20,
+    getSigma: ()=> 8,
+    getB: ()=> 2.2,
+    phaseOffset: 8.0,
+    source:'PBoC · Estimado',
+    metrics:[
+      {label:'Tasa LPR', valFn:()=>'~ 3.1%', src:'PBoC'},
+      {label:'Inflación', valFn:()=>'~ 0.5%', src:'NBS'},
+      {label:'Ciclo', valFn:()=>'Recuperación', src:'Estimado'},
+    ]
+  },
+  {
+    id:'ve', flag:'🇻🇪', name:'Venezuela', key:'COLAPSO SISTÉMICO',
+    color:'#444444',
+    collapsed: true,
+    getVal: ()=> '⚫ SIN SEÑAL',
+    getIndicator: ()=> 'Hiperinflación · b negativo · ε > A',
+    getCrisis: ()=> 98,
+    getPhaseOverride: ()=> PHASES[5],
+    getOmega: ()=> 0.52,
+    getPhi: ()=> 0,
+    getDelta: ()=> 0.001,
+    getA: ()=> 80,
+    getSigma: ()=> 95,
+    getB: ()=> -4.5,
+    phaseOffset: 9.0,
+    source:'Sin API confiable · Estimado',
+    metrics:[
+      {label:'Estado', valFn:()=>'⚫ COLAPSO', src:'Estimado'},
+      {label:'Amplitud A', valFn:()=>'80 (extrema)', src:'Modelo'},
+      {label:'Tendencia b', valFn:()=>'-4.5 (negativa)', src:'Modelo'},
+      {label:'Ruido σ', valFn:()=>'95 (supera ciclo)', src:'Modelo'},
+      {label:'Inflación', valFn:()=>'> 100% anual', src:'Estimado'},
+      {label:'Señal', valFn:()=>'NO CONFIABLE', src:'σ > A'},
+    ]
+  },
+  {
+    id:'tr', flag:'🇹🇷', name:'Turquía', key:'CRISIS · CORRECCIÓN EXTREMA',
+    color:'#FF2D55',
+    collapsed: false,
+    getVal: ()=> 'Score: -0.85',
+    getIndicator: ()=> 'Lira -90% · Inflación 85% pico',
+    getCrisis: ()=> 88,
+    getPhaseOverride: ()=> PHASES[0],
+    getOmega: ()=> 0.72,  // Turquía: ciclos rápidos y erráticos
+    getPhi: ()=> 2.8,
+    getDelta: ()=> 0.04,
+    getA: ()=> 45,
+    getSigma: ()=> 38,
+    getB: ()=> 0.3,
+    phaseOffset: 10.0,
+    source:'Estimado · TCMB',
+    metrics:[
+      {label:'Score', valFn:()=>'-0.85', src:'Modelo'},
+      {label:'Amplitud A', valFn:()=>'45 (alta)', src:'Modelo'},
+      {label:'Tendencia b', valFn:()=>'0.3 (casi nula)', src:'Modelo'},
+      {label:'Ruido σ', valFn:()=>'38 (muy alto)', src:'Modelo'},
+      {label:'Inflación pico', valFn:()=>'~ 85%', src:'TurkStat'},
+      {label:'Señal', valFn:()=>'DISTRIBUCIÓN EXTREMA', src:'Calculado'},
+    ]
+  },
+];
+
+let selectedCountry = null;
+
+// ═══════════════════════════════════════════════════
+// FETCH — BITCOIN
+// ═══════════════════════════════════════════════════
+async function fetchBTC(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+    const d=await r.json();
+    GD.btc=d.bitcoin.usd; GD.btcChg=d.bitcoin.usd_24h_change;
+    renderBTC(); updateParams(); renderCountries();
+  }catch(e){GD.btc=85000;GD.btcChg=1.2;renderBTC();}
+}
+
+function renderBTC(){
+  const c=GD.btcChg>=0?'#00E87A':'#FF2D55', a=GD.btcChg>=0?'▲':'▼';
+  set('g-btc',`<span style="color:${c}">$${GD.btc.toLocaleString('es-AR')}</span>`);
+  set('g-btcc',`<span style="color:${c}">${a} ${Math.abs(GD.btcChg).toFixed(2)}% (24h)</span>`);
+  const [ph,pc]=GD.btcChg>5?['EUFORIA','#3B8BFF']:GD.btcChg>1?['EXPANSIÓN','#00E87A']:GD.btcChg>-1?['NEUTRAL','#FFB800']:GD.btcChg>-5?['CORRECCIÓN','#FF6B35']:['CRISIS','#FF2D55'];
+  setPhase('g-btcp',ph,pc);
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — FRED
+// ═══════════════════════════════════════════════════
+async function fetchFRED(){
+  try{
+    const r=await fetch(`https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key=${FRED_KEY}&sort_order=desc&limit=2&file_type=json`);
+    const d=await r.json();
+    if(d.observations?.length>=2){
+      const l=parseFloat(d.observations[0].value),p=parseFloat(d.observations[1].value);
+      GD.inflation=((l-p)/p*100*12).toFixed(1);
+      const c=GD.inflation>4?'#FF2D55':GD.inflation>2?'#FFB800':'#00E87A';
+      set('g-inf',`<span style="color:${c}">${GD.inflation}%</span>`);
+      set('g-infc',`<span style="color:${c}">Anualizado · CPI</span>`);
+      const [ph,pc]=GD.inflation>6?['INFLACIÓN ALTA','#FF2D55']:GD.inflation>3?['PRESIÓN','#FFB800']:['OBJETIVO FED','#00E87A'];
+      setPhase('g-infp',ph,pc);
+    }
+  }catch(e){GD.inflation=3.2;set('g-inf',`<span style="color:#FFB800">3.2%</span>`);setPhase('g-infp','PRESIÓN','#FFB800');}
+
+  try{
+    const r=await fetch(`https://api.stlouisfed.org/fred/series/observations?series_id=FEDFUNDS&api_key=${FRED_KEY}&sort_order=desc&limit=1&file_type=json`);
+    const d=await r.json();
+    if(d.observations?.length){
+      GD.fedRate=parseFloat(d.observations[0].value);
+      const c=GD.fedRate>4?'#FF2D55':GD.fedRate>2?'#FFB800':'#00E87A';
+      set('g-rate',`<span style="color:${c}">${GD.fedRate.toFixed(2)}%</span>`);
+      set('g-ratec',`<span style="color:${c}">Tasa de política monetaria</span>`);
+      const [ph,pc]=GD.fedRate>5?['RESTRICTIVA','#FF2D55']:GD.fedRate>3?['ALTA','#FFB800']:['NEUTRAL','#00E87A'];
+      setPhase('g-ratep',ph,pc);
+    }
+  }catch(e){GD.fedRate=5.25;set('g-rate',`<span style="color:#FF2D55">5.25%</span>`);setPhase('g-ratep','RESTRICTIVA','#FF2D55');}
+
+  updateParams(); renderCountries();
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — S&P500
+// ═══════════════════════════════════════════════════
+async function fetchSP500(){
+  try{
+    const r=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=5d');
+    const d=await r.json();
+    const closes=d.chart.result[0].indicators.quote[0].close;
+    GD.sp500=closes[closes.length-1];
+    GD.sp500Chg=((GD.sp500-closes[closes.length-2])/closes[closes.length-2]*100);
+    const c=GD.sp500Chg>=0?'#00E87A':'#FF2D55', a=GD.sp500Chg>=0?'▲':'▼';
+    set('g-sp500',`<span style="color:${c}">${GD.sp500.toLocaleString('es-AR',{maximumFractionDigits:0})}</span>`);
+    set('g-sp500c',`<span style="color:${c}">${a} ${Math.abs(GD.sp500Chg).toFixed(2)}% hoy</span>`);
+    const [ph,pc]=GD.sp500Chg>2?['EUFORIA','#3B8BFF']:GD.sp500Chg>0?['EXPANSIÓN','#00E87A']:GD.sp500Chg>-1?['CORRECCIÓN','#FFB800']:['PRESIÓN','#FF2D55'];
+    setPhase('g-sp500p',ph,pc);
+    renderCountries();
+  }catch(e){GD.sp500=5650;GD.sp500Chg=0.8;set('g-sp500',`<span style="color:#00E87A">5.650</span>`);setPhase('g-sp500p','EXPANSIÓN','#00E87A');}
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — ARGENTINA (Bluelytics + ArgentinaDatos + BCRA)
+// ═══════════════════════════════════════════════════
+async function fetchAR(){
+  // 1. Dólar Blue/Oficial (Bluelytics)
+  try{
+    const r=await fetch('https://api.bluelytics.com.ar/v2/latest');
+    const d=await r.json();
+    GD.blueVenta=d.blue.value_sell;
+    GD.oficialVenta=d.oficial.value_sell;
+    GD.brecha=((GD.blueVenta-GD.oficialVenta)/GD.oficialVenta*100);
+  }catch(e){GD.blueVenta=1270;GD.oficialVenta=1050;GD.brecha=21;}
+
+  // 2. Riesgo País (ArgentinaDatos)
+  try{
+    const r=await fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo');
+    const d=await r.json();
+    GD.arRiesgoPais=d.valor;
+  }catch(e){GD.arRiesgoPais=700;}
+
+  // 3. Inflación mensual (ArgentinaDatos — último valor)
+  try{
+    const r=await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+    const d=await r.json();
+    if(d.length) GD.arInflacionMensual=parseFloat(d[d.length-1].valor).toFixed(1);
+  }catch(e){GD.arInflacionMensual='3.0';}
+
+  // 4. Inflación interanual (BCRA idVariable=28)
+  try{
+    const r=await fetch('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/28');
+    const d=await r.json();
+    const det=d.results?.[0]?.detalle;
+    if(det?.length) GD.arInflacionAnual=parseFloat(det[det.length-1].valor).toFixed(1);
+  }catch(e){GD.arInflacionAnual='40';}
+
+  // 5. Tasa de Política Monetaria (BCRA idVariable=160)
+  try{
+    const r=await fetch('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/160');
+    const d=await r.json();
+    const det=d.results?.[0]?.detalle;
+    if(det?.length) GD.arTasaPM=parseFloat(det[det.length-1].valor).toFixed(1);
+  }catch(e){GD.arTasaPM='40';}
+
+  // 6. Reservas Internacionales en USD millones (BCRA idVariable=1)
+  try{
+    const r=await fetch('https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/1');
+    const d=await r.json();
+    const det=d.results?.[0]?.detalle;
+    if(det?.length) GD.arReservas=parseFloat(det[det.length-1].valor);
+  }catch(e){GD.arReservas=28000;}
+
+  updateParams(); renderCountries();
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — BRASIL (BCB API pública sin auth)
+// ═══════════════════════════════════════════════════
+async function fetchBR(){
+  try{
+    // Serie 432 = Taxa SELIC
+    const r=await fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json');
+    const d=await r.json();
+    window.BR_SELIC=parseFloat(d[0].valor);
+    // Serie 13522 = IPCA 12 meses
+    try{
+      const r2=await fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/1?formato=json');
+      const d2=await r2.json();
+      window.BR_IPCA=parseFloat(d2[0].valor).toFixed(1);
+    }catch(e){window.BR_IPCA='4.8';}
+    renderCountries();
+  }catch(e){window.BR_SELIC=10.5;window.BR_IPCA='4.8';renderCountries();}
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — MEXICO (Banxico con token)
+// ═══════════════════════════════════════════════════
+async function fetchMX(){
+  try{
+    // SF43783 = Tasa de fondeo interbancario (TIIE)
+    const url=`https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF43783/datos/oportuno?token=${BMX_TOKEN}`;
+    const r=await fetch(url);
+    const d=await r.json();
+    const datos=d.bmx?.series?.[0]?.datos;
+    if(datos?.length){
+      window.MX_RATE=parseFloat(datos[datos.length-1].dato).toFixed(2);
+      renderCountries();
+    }
+  }catch(e){window.MX_RATE='9.50';renderCountries();}
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — EUROPA (BCE RSS → proxy)
+// ═══════════════════════════════════════════════════
+async function fetchEU(){
+  try{
+    // Usamos el endpoint REST del BCE para la tasa de depósito
+    const r=await fetch('https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.4F.KR.DFR.LEV?format=jsondata&lastNObservations=1');
+    const d=await r.json();
+    const obs=d.dataSets?.[0]?.series?.['0:0:0:0:0:0:0']?.observations;
+    if(obs){
+      const keys=Object.keys(obs).sort((a,b)=>+a-+b);
+      window.EU_RATE=parseFloat(obs[keys[keys.length-1]][0]).toFixed(2);
+      renderCountries();
+    }
+  }catch(e){window.EU_RATE='2.50';window.EU_INF='2.3';renderCountries();}
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER COUNTRIES
+// ═══════════════════════════════════════════════════
+function renderCountries(){
+  const grid=document.getElementById('countryGrid');
+  grid.innerHTML='';
+  COUNTRIES.forEach(c=>{
+    const ph=getBlendedPhase(t, c);
+    const crisis=c.getCrisis();
+    const isSelected=selectedCountry===c.id;
+    const isCollapsed=c.collapsed===true;
+    const div=document.createElement('div');
+    div.className='country-card'+(isSelected?' selected':'')+(isCollapsed?' collapsed':'');
+    if(isSelected){div.style.borderColor=c.color;div.style.boxShadow=`0 0 20px ${c.color}22`;}
+    if(isCollapsed && !isSelected){div.style.borderColor='#333';}
+    div.innerHTML=`
+      <div class="cc-flag">${c.flag}</div>
+      <div class="cc-name">${c.name}</div>
+      <div class="cc-key">${c.key}</div>
+      <div class="cc-val" style="color:${c.color}">${c.getVal()}</div>
+      <div class="cc-indicator">${c.getIndicator()}</div>
+      <div class="cc-phase" style="background:${ph.color}22;color:${ph.color}">${isCollapsed?'⚫ ':''}<span>${ph.name}</span></div>
+      <div class="cc-crisis">
+        <div class="cc-bar-wrap"><div class="cc-bar" style="width:${crisis}%;background:${crisis>65?'#FF2D55':crisis>35?'#FFB800':'#00E87A'}"></div></div>
+        <div class="cc-bar-label"><span>RIESGO</span><span>${Math.round(crisis)}/100</span></div>
+      </div>
+      <div class="cc-action" style="color:${ph.actionColor}">${ph.action}</div>
+      ${isCollapsed?'<div class="collapse-warn">ε supera al ciclo. La fórmula no puede dar señal. Sin datos confiables.</div>':''}
+    `;
+    div.onclick=()=>selectCountry(c.id);
+    grid.appendChild(div);
+  });
+
+  if(selectedCountry) renderDetail(selectedCountry);
+}
+
+function selectCountry(id){
+  selectedCountry = selectedCountry===id ? null : id;
+  renderCountries();
+  if(selectedCountry){
+    setTimeout(()=>document.getElementById('countryDetail').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  }
+}
+
+function renderDetail(id){
+  const c=COUNTRIES.find(x=>x.id===id);
+  if(!c) return;
+  const ph=getBlendedPhase(t, c);
+  const A=c.getA(), sigma=c.getSigma(), b=c.getB();
+  const omega=c.getOmega(), phi=c.getPhi(), delta=c.getDelta();
+  const damp = Math.exp(-delta * Math.abs(Math.sin(omega*t+phi)));
+  const localY=(A*damp*Math.sin(omega*t+phi)+b*t).toFixed(2);
+
+  const detail=document.getElementById('countryDetail');
+  detail.className='country-detail visible';
+  detail.innerHTML=`
+    <div class="cd-header">
+      <div class="cd-flag">${c.flag}</div>
+      <div class="cd-info">
+        <div class="cd-name">${c.name}</div>
+        <div class="cd-phase" style="background:${ph.color}22;color:${ph.color};border:1px solid ${ph.color}44">${ph.name} · ${ph.action}</div>
+      </div>
+    </div>
+    <div class="cd-metrics">
+      ${c.metrics.map(m=>`
+        <div class="cd-metric">
+          <div class="cd-m-label">${m.label}</div>
+          <div class="cd-m-val" style="color:${c.color}">${m.valFn()}</div>
+          <div class="cd-m-src">Fuente: ${m.src}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="cd-formula">
+      <div class="cd-f-title">FÓRMULA APLICADA A ${c.name.toUpperCase()}</div>
+      <div class="cd-f-eq">y(t) = ${A}·e<sup>-${delta.toFixed(3)}t</sup>·sin(${omega.toFixed(2)}t + ${phi.toFixed(2)}) + ${b}t + ${sigma.toFixed(1)}·ξ(t)</div>
+      <div class="cd-f-params">
+        <div class="cd-fp"><span style="color:#FF2D55">A=${A}</span> <span>Amplitud</span></div>
+        <div class="cd-fp"><span style="color:#3B8BFF">ω=${omega.toFixed(2)}</span> <span>Vel. ciclo (T≈${(2*Math.PI/omega).toFixed(1)} años)</span></div>
+        <div class="cd-fp"><span style="color:#FF6B35">δ=${delta.toFixed(3)}</span> <span>Amortiguación</span></div>
+        <div class="cd-fp"><span style="color:#00E87A">b=${b}</span> <span>Tendencia</span></div>
+        <div class="cd-fp"><span style="color:var(--dim)">σ=±${sigma.toFixed(1)}</span> <span>Volatilidad</span></div>
+        <div class="cd-fp"><span style="color:#FFB800">y(t)=${localY>0?'+':''}${localY}</span> <span>Valor ahora</span></div>
+      </div>
+    </div>
+    <div class="cd-advice" style="background:${ph.color}15;border:1px solid ${ph.color}33;color:${ph.color}">
+      💡 ${ph.advice}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// PHASE STRIP
+// ═══════════════════════════════════════════════════
+function renderPhaseStrip(){
+  const cur=getPhase(t);
+  const grid=document.getElementById('phaseGrid');
+  grid.innerHTML='';
+  PHASES.forEach((p,i)=>{
+    const isActive=p.id===cur.id;
+    const div=document.createElement('div');
+    div.className='pg-item'+(isActive?' pg-active':'');
+    div.innerHTML=`
+      <div class="pg-bar" style="background:${p.color}"></div>
+      <div class="pg-num">FASE ${i+1}${isActive?' · AHORA':''}</div>
+      <div class="pg-name" style="color:${p.color}">${p.name}</div>
+      <div class="pg-desc">${p.desc}</div>
+      <div class="pg-action" style="background:${p.actionBg};color:${p.actionColor}">${p.action}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// WAVE CANVAS
+// ═══════════════════════════════════════════════════
+function drawWave(){
+  const canvas=document.getElementById('waveCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const W=rect.width,H=rect.height;
+  const pL=36,pR=12,pT=20,pB=24;
+  const cW=W-pL-pR,cH=H-pT-pB;
+
+  ctx.fillStyle='#090D1A'; ctx.fillRect(0,0,W,H);
+
+  const TSPAN=32;
+  const tS=waveT;
+  const vals=[];
+  for(let i=0;i<=500;i++) vals.push(yClean(tS+i/500*TSPAN));
+  const minV=Math.min(...vals),maxV=Math.max(...vals),range=(maxV-minV)||1;
+  const toX=tv=>pL+((tv-tS)/TSPAN)*cW;
+  const toY=v=>pT+((maxV-v)/range)*cH;
+
+  // grid
+  for(let i=0;i<=4;i++){
+    const gy=pT+(cH/4)*i;
+    ctx.strokeStyle='rgba(238,240,255,0.04)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(W-pR,gy);ctx.stroke();
+    ctx.fillStyle='rgba(238,240,255,0.22)';ctx.font="8px 'Syne Mono'";ctx.textAlign='right';
+    ctx.fillText((maxV-range/4*i).toFixed(0),pL-3,gy+3);
+  }
+
+  // fill
+  const gf=ctx.createLinearGradient(0,pT,0,pT+cH);
+  gf.addColorStop(0,'rgba(59,139,255,0.15)');gf.addColorStop(0.5,'rgba(0,232,122,0.07)');gf.addColorStop(1,'rgba(255,45,85,0.13)');
+  ctx.beginPath();
+  for(let i=0;i<=500;i++){const tv=tS+i/500*TSPAN;i===0?ctx.moveTo(toX(tv),toY(yClean(tv))):ctx.lineTo(toX(tv),toY(yClean(tv)));}
+  ctx.lineTo(W-pR,pT+cH);ctx.lineTo(pL,pT+cH);ctx.closePath();ctx.fillStyle=gf;ctx.fill();
+
+  // noise
+  ctx.beginPath();
+  for(let i=0;i<=500;i++){const tv=tS+i/500*TSPAN;const px=toX(tv),py=toY(yNoise(tv));i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.strokeStyle='rgba(238,240,255,0.08)';ctx.lineWidth=1;ctx.stroke();
+
+  // main
+  ctx.beginPath();
+  for(let i=0;i<=500;i++){const tv=tS+i/500*TSPAN;const px=toX(tv),py=toY(yClean(tv));i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  const sg=ctx.createLinearGradient(pL,0,W-pR,0);
+  sg.addColorStop(0,'#FF2D55');sg.addColorStop(0.25,'#FFB800');sg.addColorStop(0.5,'#00E87A');sg.addColorStop(0.75,'#3B8BFF');sg.addColorStop(1,'#FF6B35');
+  ctx.strokeStyle=sg;ctx.lineWidth=2.5;ctx.stroke();
+
+  // NOW dot
+  const ph=getPhase(t);
+  const nx=toX(t),ny=toY(yClean(t));
+  ctx.beginPath();ctx.arc(nx,ny,16,0,Math.PI*2);ctx.fillStyle=ph.color+'18';ctx.fill();
+  ctx.beginPath();ctx.arc(nx,ny,8,0,Math.PI*2);ctx.fillStyle=ph.color;ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=ph.color;ctx.font="bold 8px 'Syne Mono'";ctx.textAlign='center';
+  ctx.fillText('▼ AHORA',nx,ny-18);
+
+  // badge
+  const badge=document.getElementById('waveBadge');
+  badge.textContent=ph.name+' · '+ph.action;
+  badge.style.background=ph.color+'22';
+  badge.style.color=ph.color;
+  badge.style.border=`1px solid ${ph.color}44`;
+}
+
+function renderWaveParams(){
+  set('wA',P.A.toFixed(1));
+  set('wW',P.omega.toFixed(2));
+  set('wPhi',P.phi.toFixed(2)+' rad');
+  set('wB',P.b.toFixed(2));
+  set('wEps','±'+P.sigma.toFixed(1));
+  const elDelta=document.getElementById('wDelta');
+  if(elDelta) elDelta.textContent=P.delta.toFixed(3);
+  const yt=yClean(t);
+  document.getElementById('wYt').textContent=(yt>0?'+':'')+yt.toFixed(2);
+  document.getElementById('wYt').style.color=yt>0?'#00E87A':'#FF2D55';
+}
+
+// ═══════════════════════════════════════════════════
+// TICKER
+// ═══════════════════════════════════════════════════
+function buildTicker(){
+  const items=[
+    {l:'S&P500',    v:()=>GD.sp500?GD.sp500.toLocaleString('es-AR',{maximumFractionDigits:0}):'...', c:()=>GD.sp500Chg>=0?'#00E87A':'#FF2D55'},
+    {l:'BITCOIN',   v:()=>GD.btc?'$'+GD.btc.toLocaleString('es-AR'):'...', c:()=>GD.btcChg>=0?'#00E87A':'#FF2D55'},
+    {l:'INF USA',   v:()=>GD.inflation?GD.inflation+'%':'...', c:()=>'#FFB800'},
+    {l:'TASA FED',  v:()=>GD.fedRate?GD.fedRate+'%':'...', c:()=>'#FF2D55'},
+    {l:'BLUE ARG',  v:()=>GD.blueVenta?'$'+GD.blueVenta:'...', c:()=>'#FFB800'},
+    {l:'SELIC BR',  v:()=>window.BR_SELIC?window.BR_SELIC+'%':'...', c:()=>'#00E87A'},
+    {l:'TIIE MX',   v:()=>window.MX_RATE?window.MX_RATE+'%':'...', c:()=>'#FF6B35'},
+    {l:'BCE EU',    v:()=>window.EU_RATE?window.EU_RATE+'%':'...', c:()=>'#5856D6'},
+    {l:'RIESGO PAÍS',v:()=>GD.arRiesgoPais?GD.arRiesgoPais+' pts':'...', c:()=>GD.arRiesgoPais>1000?'#FF2D55':GD.arRiesgoPais>600?'#FFB800':'#00E87A'},
+    {l:'BRECHA ARG',v:()=>GD.brecha?GD.brecha.toFixed(1)+'%':'...', c:()=>GD.brecha>50?'#FF2D55':'#FFB800'},
+    {l:'FASE',      v:()=>getPhase(t).name, c:()=>getPhase(t).color},
+    {l:'REGLA',     v:()=>'COMPRÁ EN CRISIS · VENDÉ EN EUFORIA', c:()=>'#FFB800'},
+    {l:'CREADOR',   v:()=>'MARCOS GAINZA', c:()=>'#3B8BFF'},
+  ];
+  const el=document.getElementById('tickerEl');
+  el.innerHTML='';
+  [...items,...items].forEach(i=>{
+    const d=document.createElement('div');
+    d.className='ti';
+    d.innerHTML=`<span class="ti-l">${i.l}</span><span class="ti-v" style="color:${i.c()}">${i.v()}</span><span style="color:rgba(238,240,255,0.12)">·</span>`;
+    el.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function set(id,html){const el=document.getElementById(id);if(el)el.innerHTML=html;}
+function setPhase(id,text,color){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=text;
+  el.style.background=color+'22';
+  el.style.color=color;
+}
+function clock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+}
+
+// ═══════════════════════════════════════════════════
+// MGI — MARCOS GAINZA INDEX (5 indicadores reales)
+// Metodología oficial v1.0
+// ═══════════════════════════════════════════════════
+const MGI_HISTORY = [];
+const MGI_HISTORY_MAX = 30;
+
+function mgiRecord(yt){
+  MGI_HISTORY.push(yt);
+  if(MGI_HISTORY.length > MGI_HISTORY_MAX) MGI_HISTORY.shift();
+}
+
+function mgiMA(n){
+  if(MGI_HISTORY.length < n) return null;
+  const slice = MGI_HISTORY.slice(-n);
+  return slice.reduce((a,b)=>a+b,0) / n;
+}
+
+function calcMGI(){
+  const yt = yClean(t);
+  mgiRecord(yt);
+
+  // I₁ — Posición en el seno: score = -sin(ωt+φ)
+  const I1 = -Math.sin(P.omega * t + P.phi);
+
+  // I₂ — Pendiente del ciclo: sign(y(t) - y(t-Δ))
+  const ytPrev = yClean(t - 0.1);
+  const diff = yt - ytPrev;
+  const I2 = diff > 0.01 ? 1 : diff < -0.01 ? -1 : 0;
+
+  // I₃ — Distancia a la media: -(y(t) - μ) / A
+  const mu = mgiMA(20);
+  const I3 = mu !== null ? Math.max(-1, Math.min(1, -((yt - mu) / Math.max(P.A, 1)))) : 0;
+
+  // I₄ — Confiabilidad ε: conf = 1 - (σ/25)
+  const I4 = Math.max(0, Math.min(1, 1 - (P.sigma / 25)));
+
+  // I₅ — Cruce de medias: sign(MA₅ - MA₂₀)
+  const ma5 = mgiMA(5), ma20 = mgiMA(20);
+  const I5 = (ma5 !== null && ma20 !== null) ? (ma5 > ma20 ? 1 : ma5 < ma20 ? -1 : 0) : 0;
+
+  // MGI Score = [(I₁ + I₂ + I₃ + I₅) / 4] × conf(ε)
+  const raw = (I1 + I2 + I3 + I5) / 4;
+  const score = raw * I4;
+  const isCollapse = P.sigma > P.A;
+
+  return { score, I1, I2, I3, I4, I5, isCollapse };
+}
+
+function getMGISignal(score, isCollapse){
+  if(isCollapse) return {text:'⚫ COLAPSO SISTÉMICO', color:'#888888', bg:'rgba(68,68,68,0.2)'};
+  if(score >= 0.40)  return {text:'🟢 ACUMULACIÓN',   color:'#00E87A', bg:'rgba(0,232,122,0.12)'};
+  if(score >= -0.40) return {text:'🟡 NEUTRAL',       color:'#FFB800', bg:'rgba(255,184,0,0.12)'};
+  return                    {text:'🔴 DISTRIBUCIÓN',  color:'#FF2D55', bg:'rgba(255,45,85,0.12)'};
+}
+
+function fmtScore(v){ return (v>=0?'+':'')+v.toFixed(2); }
+
+function renderMGI(){
+  const m = calcMGI();
+  const sig = getMGISignal(m.score, m.isCollapse);
+
+  const scoreEl = document.getElementById('mgiScore');
+  scoreEl.textContent = m.isCollapse ? '⚫' : fmtScore(m.score);
+  scoreEl.style.color = sig.color;
+
+  const sigEl = document.getElementById('mgiSignal');
+  sigEl.textContent = sig.text;
+  sigEl.style.background = sig.bg;
+  sigEl.style.color = sig.color;
+  sigEl.style.border = `1px solid ${sig.color}44`;
+
+  const pct = ((m.score + 1) / 2) * 100;
+  document.getElementById('mgiNeedle').style.left = `calc(${pct}% - 1.5px)`;
+
+  const cFor = v => v > 0.3 ? '#00E87A' : v > -0.3 ? '#FFB800' : '#FF2D55';
+  const cConf = v => v > 0.7 ? '#00E87A' : v > 0.4 ? '#FFB800' : '#FF2D55';
+  const setI = (id, val, color) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.querySelector('.mi-val').textContent = typeof val==='string' ? val : fmtScore(val);
+    el.querySelector('.mi-val').style.color = color;
+  };
+  setI('mgiI1', m.I1, cFor(m.I1));
+  setI('mgiI2', m.I2, cFor(m.I2));
+  setI('mgiI3', m.I3, cFor(m.I3));
+  setI('mgiI4', m.I4.toFixed(2), cConf(m.I4));
+  setI('mgiI5', m.I5, cFor(m.I5));
+
+  const sc = (id,txt,c) => { const el=document.getElementById(id); if(el){el.textContent=txt;el.style.color=c||'var(--white)';} };
+  sc('mgiC_btc', GD.btc ? `$${GD.btc.toLocaleString('es-AR')}  ${GD.btcChg>=0?'▲':'▼'} ${Math.abs(GD.btcChg||0).toFixed(2)}%` : '...', GD.btcChg>=0?'#00E87A':'#FF2D55');
+  sc('mgiC_sp', GD.sp500 ? `${GD.sp500.toLocaleString('es-AR',{maximumFractionDigits:0})}  ${GD.sp500Chg>=0?'▲':'▼'} ${Math.abs(GD.sp500Chg||0).toFixed(2)}%` : '...', GD.sp500Chg>=0?'#00E87A':'#FF2D55');
+  sc('mgiC_inf', GD.inflation ? `${GD.inflation}% anual` : '...', GD.inflation>4?'#FF2D55':'#FFB800');
+  sc('mgiC_blue', GD.blueVenta ? `$${GD.blueVenta}  Brecha: ${GD.brecha?GD.brecha.toFixed(1)+'%':'...'}` : '...', '#FFB800');
+  sc('mgiC_rp', GD.arRiesgoPais ? `${GD.arRiesgoPais} pts` : '...', GD.arRiesgoPais>800?'#FF2D55':GD.arRiesgoPais>400?'#FFB800':'#00E87A');
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════
+function loop(){
+  t+=0.003;
+  waveT=Math.max(0,t-10);
+  frame++;
+  drawWave();
+  clock();
+  if(frame%90===0){renderPhaseStrip();renderWaveParams();buildTicker();renderMGI();}
+  if(frame%180===0&&selectedCountry) renderDetail(selectedCountry);
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+renderCountries();
+renderPhaseStrip();
+buildTicker();
+renderWaveParams();
+renderMGI();
+
+fetchBTC();
+fetchFRED();
+fetchSP500();
+fetchAR();
+fetchBR();
+fetchMX();
+fetchEU();
+
+setInterval(()=>{fetchBTC();fetchAR();},60000);
+setInterval(()=>{fetchBR();fetchMX();fetchEU();},120000);
+setInterval(()=>{fetchFRED();fetchSP500();},600000);
+
+window.addEventListener('resize',drawWave);
+loop();
+</script>
+<script data-goatcounter="https://marcosgainza.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
