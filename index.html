@@ -418,6 +418,20 @@ body::before{
     <div class="gs-chg" id="g-ratec"></div>
     <div class="gs-phase" id="g-ratep"></div>
   </div>
+  <div class="gs-card">
+    <div class="gs-source"><div class="gs-dot" style="background:#E040FB"></div>CBOE · YAHOO FINANCE</div>
+    <div class="gs-label">VIX · Índice de Miedo</div>
+    <div class="gs-val" id="g-vix"><span class="dc-loading">Cargando...</span></div>
+    <div class="gs-chg" id="g-vixc"></div>
+    <div class="gs-phase" id="g-vixp"></div>
+  </div>
+  <div class="gs-card">
+    <div class="gs-source"><div class="gs-dot" style="background:#FFD700"></div>FRED · ICE</div>
+    <div class="gs-label">DXY · Índice Dólar Global</div>
+    <div class="gs-val" id="g-dxy"><span class="dc-loading">Cargando...</span></div>
+    <div class="gs-chg" id="g-dxyc"></div>
+    <div class="gs-phase" id="g-dxyp"></div>
+  </div>
 </div>
 
 <!-- GLOBAL WAVE -->
@@ -1494,6 +1508,56 @@ function loop(){
 }
 
 // ═══════════════════════════════════════════════════
+// FETCH — VIX (Índice de Miedo)
+// ═══════════════════════════════════════════════════
+async function fetchVIX(){
+  try{
+    const r=await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=5d');
+    const d=await r.json();
+    const closes=d.chart.result[0].indicators.quote[0].close;
+    GD.vix=closes[closes.length-1];
+    const prev=closes[closes.length-2];
+    GD.vixChg=((GD.vix-prev)/prev*100);
+    renderVIX();
+  }catch(e){GD.vix=18;GD.vixChg=0;renderVIX();}
+}
+
+function renderVIX(){
+  const c=GD.vix>30?'#FF2D55':GD.vix>20?'#FFB800':'#00E87A';
+  const a=GD.vixChg>=0?'▲':'▼';
+  set('g-vix',`<span style="color:${c}">${GD.vix.toFixed(2)}</span>`);
+  set('g-vixc',`<span style="color:${c}">${a} ${Math.abs(GD.vixChg).toFixed(2)}%</span>`);
+  const [ph,pc]=GD.vix>35?['PÁNICO','#FF2D55']:GD.vix>25?['MIEDO','#FF6B35']:GD.vix>18?['ALERTA','#FFB800']:['CALMA','#00E87A'];
+  setPhase('g-vixp',ph,pc);
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — DXY (Índice Dólar)
+// ═══════════════════════════════════════════════════
+async function fetchDXY(){
+  try{
+    const r=await fetch(`https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&api_key=${FRED_KEY}&sort_order=desc&limit=2&file_type=json`);
+    const d=await r.json();
+    if(d.observations?.length>=2){
+      const curr=parseFloat(d.observations[0].value);
+      const prev=parseFloat(d.observations[1].value);
+      GD.dxy=curr;
+      GD.dxyChg=((curr-prev)/prev*100);
+      renderDXY();
+    }
+  }catch(e){GD.dxy=104;GD.dxyChg=0;renderDXY();}
+}
+
+function renderDXY(){
+  const c=GD.dxyChg>=0?'#FF6B35':'#00E87A';
+  const a=GD.dxyChg>=0?'▲':'▼';
+  set('g-dxy',`<span style="color:${c}">${GD.dxy.toFixed(2)}</span>`);
+  set('g-dxyc',`<span style="color:${c}">${a} ${Math.abs(GD.dxyChg).toFixed(2)}%</span>`);
+  const [ph,pc]=GD.dxy>108?['DÓLAR FUERTE','#FF2D55']:GD.dxy>103?['FIRME','#FFB800']:GD.dxy>98?['NEUTRAL','#00E87A']:['DÓLAR DÉBIL','#3B8BFF'];
+  setPhase('g-dxyp',ph,pc);
+}
+
+// ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
 renderCountries();
@@ -1505,6 +1569,8 @@ renderMGI();
 fetchBTC();
 fetchFRED();
 fetchSP500();
+fetchVIX();
+fetchDXY();
 fetchAR();
 fetchBR();
 fetchMX();
@@ -1512,7 +1578,7 @@ fetchEU();
 
 setInterval(()=>{fetchBTC();fetchAR();},60000);
 setInterval(()=>{fetchBR();fetchMX();fetchEU();},120000);
-setInterval(()=>{fetchFRED();fetchSP500();},600000);
+setInterval(()=>{fetchFRED();fetchSP500();fetchVIX();fetchDXY();},600000);
 
 window.addEventListener('resize',drawWave);
 loop();
